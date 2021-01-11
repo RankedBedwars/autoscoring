@@ -1,10 +1,3 @@
-var __spreadArrays = (this && this.__spreadArrays) || function () {
-    for (var s = 0, i = 0, il = arguments.length; i < il; i++) s += arguments[i].length;
-    for (var r = Array(s), k = 0, i = 0; i < il; i++)
-        for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++)
-            r[k] = a[j];
-    return r;
-};
 var mineflayer = require('mineflayer');
 var ranks = ['[VIP]', '[VIP+]', '[MVP]', '[MVP+]', '[MVP++]', '[YOUTUBE]', '[HELPER]', '[MOD]', '[ADMIN]'];
 var bot = mineflayer.createBot({
@@ -18,11 +11,13 @@ bot.on("login", function () {
     console.log(bot.username + " --> Online!");
 });
 // setup these variables when game starts
-var team1 = []; // Player Objects
-var team2 = []; // Player Objects
-var botInviteList = __spreadArrays(team1, team2); // shd remain this
+var players = [];
+var botInviteList = players.map(function (p) { return p.minecraft.name; }); // shd remain this
+var team1 = botInviteList.slice(0, 4);
+var team2 = botInviteList.slice(4);
 var greenTeam = []; // shd be empty
 var redTeam = []; // shd be empty
+var peopleWhoBrokeBeds = [];
 bot.on("message", function (message) {
     var line0 = message.toString().split('\n')[0];
     var line0_arr = line0.split(' ');
@@ -54,16 +49,14 @@ bot.on("message", function (message) {
     if (line0.endsWith('FINAL KILL!')) {
         var ign = line0_arr.slice(-3, -2)[0].slice(0, -1);
         if (ign === 'void') {
-            return;
+            return findPlayer(line0_arr[0]).deaths++;
         }
-        console.log(ign + " --> Final Kill");
-        // update player kills here
+        findPlayer(ign).kills++;
+        return findPlayer(line0_arr[0]).deaths++;
     }
     // Bed Destroyed
     else if (line0.startsWith('BED DESTRUCTION >')) {
-        var ign = line0_arr.slice(-1)[0].slice(0, -1);
-        console.log(ign + " --> Bed Destruction");
-        // update team beds here by checking ign and also which team its in and        
+        peopleWhoBrokeBeds.push(line0_arr.slice(-1)[0].slice(0, -1));
     }
     // Actual Game Start
     else if (line0.trim() === 'Protect your bed and destroy the enemy beds.') {
@@ -72,23 +65,15 @@ bot.on("message", function (message) {
     }
     // Normal Death
     else if (line0.indexOf('fell into the void.') !== -1) {
-        var ign = line0_arr[0];
-        console.log("DEATH --> " + message);
-        // update deaths
-    }
-    // Game End
-    else if (line0.includes('This game has been recorded.')) {
-        bot.chat('/pc Great game guys! Svee says have a good day <3');
-        bot.chat('/p leave');
-        // update game status and end game
+        findPlayer(line0_arr[0]).deaths++;
     }
     // Win Tracker
     else if (trimmed.startsWith('Red -')) {
-        // Red Wins
+        endGame(redTeam);
     }
     // Win Tracker
     else if (trimmed.startsWith('Green -')) {
-        return; // Green Wins
+        endGame(greenTeam);
     }
     // KILL SECTION HERE SHD GO IN THE END    
     if (redPos === -1 || greenPos === -1) {
@@ -98,29 +83,54 @@ bot.on("message", function (message) {
     if (kill.includes('party') || kill.includes('eliminated') || kill.includes('<<') || kill.includes('----------------------------') || kill.includes('-----------------------------')) {
         return;
     }
-    if (motD.indexOf('§c') < motD.indexOf('§a')) {
-        if (!set) {
-            if (team1.includes(kill[0])) {
-                greenTeam = team1;
-                redTeam = team2;
-            }
+    if (motD.indexOf('§c') < motD.indexOf('§a') && !set) {
+        if (team1.includes(kill[0])) {
+            greenTeam = team1;
+            redTeam = team2;
         }
-        console.log("killer --> " + kill[0] + "\nkillee --> " + kill[1]);
-        console.log("Green Team --> " + greenTeam + "\nRed Team --> " + redTeam);
-        set = true;
+        console.log('teams set');
     }
-    else {
-        if (!set) {
-            if (team1.includes(kill[0])) {
-                redTeam = team1;
-                greenTeam = team2;
-            }
+    else if (!set) {
+        if (team1.includes(kill[0])) {
+            redTeam = team1;
+            greenTeam = team2;
         }
-        console.log("killer --> " + kill[0] + "\nkillee --> " + kill[1]);
-        console.log("Green Team --> " + greenTeam + "\nRed Team --> " + redTeam);
-        set = true;
+        console.log('teams set');
     }
+    console.log("killer --> " + kill[0] + "\nkillee --> " + kill[1]);
+    console.log("Green Team --> " + greenTeam + "\nRed Team --> " + redTeam);
+    findPlayer(kill[0]).kills++;
+    findPlayer(kill[1]).deaths++;
+    set = true;
 });
 function findPlayer(ign) {
     return botInviteList.find(function (player) { return player.minecraft.name === ign; });
+}
+function endGame(team) {
+    bot.chat('/pc Great game guys! Svee says have a good day <3');
+    bot.chat('/p leave');
+    players.forEach(function (player) {
+        if (team.includes(player.minecraft.name)) {
+            player.winstreak++;
+            player.wins++;
+        }
+        else {
+            player.winstreak = 0;
+            player.losses++;
+        }
+        if (peopleWhoBrokeBeds.includes(player.minecraft.ign)) {
+            player.bedsBroken++;
+            player.bedsStreak++;
+        }
+        else {
+            player.bedsStreak = 0;
+        }
+        if (peopleWhoBrokeBeds.length === 2) {
+            player.bedsLost++;
+        }
+        else if (!team.includes(player.minecraft.name)) {
+            player.bedsLost++;
+        }
+        // emit event
+    });
 }
