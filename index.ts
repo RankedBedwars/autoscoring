@@ -14,11 +14,13 @@ bot.on("login", () => {
 
 // setup these variables when game starts
 
-let team1 = []; // Player Objects
-let team2 = []; // Player Objects
-let botInviteList = [...team1, ...team2]; // shd remain this
+let players = [];
+const botInviteList = players.map(p => p.minecraft.name); // shd remain this
+const team1 = botInviteList.slice(0, 4);
+const team2 = botInviteList.slice(4);
 let greenTeam = []; // shd be empty
 let redTeam = []; // shd be empty
+let peopleWhoBrokeBeds = [];
 
 bot.on("message", message => {
 
@@ -62,19 +64,16 @@ bot.on("message", message => {
         let ign = line0_arr.slice(-3, -2)[0].slice(0, -1);
 
         if(ign === 'void') {
-            return ;
+            return findPlayer(line0_arr[0]).deaths++;
         }
 
-        console.log(`${ign} --> Final Kill`);
-        // update player kills here
+        findPlayer(ign).kills++;
+        return findPlayer(line0_arr[0]).deaths++;
     }
 
     // Bed Destroyed
     else if(line0.startsWith('BED DESTRUCTION >')) {
-
-        const ign = line0_arr.slice(-1)[0].slice(0, -1);
-        console.log(`${ign} --> Bed Destruction`);
-        // update team beds here by checking ign and also which team its in and        
+        peopleWhoBrokeBeds.push(line0_arr.slice(-1)[0].slice(0, -1));
     }
 
     // Actual Game Start
@@ -86,27 +85,17 @@ bot.on("message", message => {
 
     // Normal Death
     else if(line0.indexOf('fell into the void.') !== -1) {
-        const ign = line0_arr[0];
-        console.log(`DEATH --> ${message}`);
-        // update deaths
-    }
-
-    // Game End
-    else if(line0.includes('This game has been recorded.')) {
-        bot.chat('/pc Great game guys! Svee says have a good day <3');
-        bot.chat('/p leave');
-
-        // update game status and end game
+        findPlayer(line0_arr[0]).deaths++;
     }
 
     // Win Tracker
     else if(trimmed.startsWith('Red -')) {
-        // Red Wins
+        endGame(redTeam);
     }
 
     // Win Tracker
     else if(trimmed.startsWith('Green -')) {
-        return; // Green Wins
+        endGame(greenTeam);
     }
 
     // KILL SECTION HERE SHD GO IN THE END    
@@ -120,30 +109,62 @@ bot.on("message", message => {
         return;
     }
 
-    if(motD.indexOf('§c') < motD.indexOf('§a')) {
-        if(!set) {
-            if(team1.includes(kill[0])) {
-                greenTeam = team1;
-                redTeam = team2;
-            }
+    if(motD.indexOf('§c') < motD.indexOf('§a') && !set) {
+        if(team1.includes(kill[0])) {
+            greenTeam = team1;
+            redTeam = team2;
         }
-        console.log(`killer --> ${kill[0]}\nkillee --> ${kill[1]}`);
-        console.log(`Green Team --> ${greenTeam}\nRed Team --> ${redTeam}`);
-        set = true;
+        console.log('teams set');
     }
-    else {
-        if(!set) {
-            if(team1.includes(kill[0])) {
-                redTeam = team1;
-                greenTeam = team2;
-            }
+    else if(!set) {
+        if(team1.includes(kill[0])) {
+            redTeam = team1;
+            greenTeam = team2;
         }
-        console.log(`killer --> ${kill[0]}\nkillee --> ${kill[1]}`);
-        console.log(`Green Team --> ${greenTeam}\nRed Team --> ${redTeam}`);
-        set = true;
+        console.log('teams set');        
     }
+
+    console.log(`killer --> ${kill[0]}\nkillee --> ${kill[1]}`);
+        console.log(`Green Team --> ${greenTeam}\nRed Team --> ${redTeam}`);
+        findPlayer(kill[0]).kills++;
+        findPlayer(kill[1]).deaths++;
+        set = true;
 })
 
 function findPlayer(ign) {
     return botInviteList.find(player => player.minecraft.name === ign);
+}
+
+function endGame(team) {
+    bot.chat('/pc Great game guys! Svee says have a good day <3');
+    bot.chat('/p leave');
+
+    players.forEach(player => {
+
+        if(team.includes(player.minecraft.name)) {
+            player.winstreak++;
+            player.wins++;
+        }
+        else {
+            player.winstreak = 0;
+            player.losses++;
+        }
+
+        if(peopleWhoBrokeBeds.includes(player.minecraft.ign)) {
+            player.bedsBroken++;
+            player.bedsStreak++;
+        } 
+        else {
+            player.bedsStreak = 0;
+        }
+
+        if(peopleWhoBrokeBeds.length === 2) {
+            player.bedsLost++;
+        }
+        else if(!team.includes(player.minecraft.name)) {
+            player.bedsLost++;
+        }
+
+        // emit event
+    })
 }
