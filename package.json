@@ -1,0 +1,16 @@
+{
+  "name": "test",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "node index.js"
+  },
+  "author": "Svee",
+  "license": "ISC",
+  "dependencies": {
+    "mineflayer": "^2.40.1",
+    "socket.io": "^3.0.5",
+    "typescript": "^4.1.3"
+  }
+}
