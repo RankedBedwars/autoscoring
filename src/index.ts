@@ -1,28 +1,38 @@
-import mineflayer = require('mineflayer');
+import { io } from "socket.io-client";
+import mineflayer from "mineflayer";
+import type { Player } from "./Player";
+import type { GameStart } from "./Events";
+
+const socket = io(`http://localhost:${process.env.SOCKET_PORT!}?key=${process.env.SOCKET_KEY!}&bot=${process.env.USERNAME!}`);
+
 const ranks = ['[VIP]', '[VIP+]', '[MVP]', '[MVP+]', '[MVP++]', '[YOUTUBE]', '[HELPER]', '[MOD]', '[ADMIN]'];
 let bot = mineflayer.createBot({
     host: 'mc.hypixel.net',
     version: '1.8',
-    username: 'luddezwallin@gmail.com',
-    password: 'Hibbert66!',
-})
+    username: process.env.USERNAME!,
+    password: process.env.PASSWORD!,
+});
 
-var set = false;
-var players = [];
-var pTemp = [...players];
-var botInviteList = players.map(p => p.minecraft.name);
-var team1 = botInviteList.slice(0, 4);
-var team2 = botInviteList.slice(4);
-var greenTeam = [];
-var redTeam = []; 
-var peopleWhoBrokeBeds = [];
+let set = false;
+let players: Player[] = [];
+let pTemp = [...players];
+let botInviteList = players.map(p => p.minecraft.name);
+let team1 = botInviteList.slice(0, 4);
+let team2 = botInviteList.slice(4);
+let greenTeam: string[] = [];
+let redTeam: string[] = []; 
+let peopleWhoBrokeBeds: string[] = [];
 
 bot.on("login", () => {
     console.log(`${bot.username} --> Online!`);
-})
+});
+
+socket.on("gameStart", (data: GameStart) => {
+    // data.players
+});
 
 bot.on("message", message => {
-
+    
     console.log(`MESSAGE:\n[${message.toString().split('\n')}]\n`);
 
     const line0 = message.toString().split('\n')[0];
@@ -91,7 +101,7 @@ bot.on("message", message => {
             }
             set = true;
             try {
-                return findPlayer(line0_arr[0]).deaths++;
+                return findPlayer(line0_arr[0])!.deaths!++;
             }
             catch {
                 gameReset();
@@ -133,8 +143,8 @@ bot.on("message", message => {
         set = true;
 
         try {
-            p.kills++;
-            return findPlayer(line0_arr[0]).deaths++;
+            p.kills!++;
+            return findPlayer(line0_arr[0])!.deaths!++;
         }
         catch {
             gameReset();
@@ -156,7 +166,7 @@ bot.on("message", message => {
     // Normal Death
     else if(line0.indexOf('fell into the void.') !== -1) {
         try {
-            return findPlayer(line0_arr[0]).deaths++;
+            return findPlayer(line0_arr[0])!.deaths!++;
         }
         catch {
             gameReset();
@@ -210,8 +220,8 @@ bot.on("message", message => {
     console.log(`killer --> ${kill[0]}\nkillee --> ${kill[1]}`);
     console.log(`Green Team --> ${greenTeam}\nRed Team --> ${redTeam}`);
     try {
-        findPlayer(kill[0]).kills++;
-        return findPlayer(kill[1]).deaths++;
+        findPlayer(kill[0])!.kills!++;
+        return findPlayer(kill[1])!.deaths!++;
     }
     catch {
         gameReset();
@@ -220,11 +230,11 @@ bot.on("message", message => {
     
 })
 
-function findPlayer(ign) {
+function findPlayer(ign: string) {
     return players.find(player => player.minecraft.name === ign);
 }
 
-function endGame(team) {
+function endGame(team: string[]) {
     if(peopleWhoBrokeBeds.length === 0) {
         bot.chat('Game is being requeued.');
         gameReset();
@@ -236,27 +246,27 @@ function endGame(team) {
     players.forEach(player => {
 
         if(team.includes(player.minecraft.name)) {
-            player.winstreak++;
-            player.wins++;
+            player.winstreak!++;
+            player.wins!++;
         }
         else {
             player.winstreak = 0;
-            player.losses++;
+            player.losses!++;
         }
 
-        if(peopleWhoBrokeBeds.includes(player.minecraft.name)) {
-            player.bedsBroken++;
-            player.bedsStreak++;
+        if(peopleWhoBrokeBeds!.includes(player.minecraft.name)) {
+            player.bedsBroken!++;
+            player.bedstreak!++;
         } 
         else {
-            player.bedsStreak = 0;
+            player.bedstreak = 0;
         }
 
         if(peopleWhoBrokeBeds.length === 2) {
-            player.bedsLost++;
+            player.bedsLost!++;
         }
         else if(!team.includes(player.minecraft.name)) {
-            player.bedsLost++;
+            player.bedsLost!++;
         }        
     })
 
