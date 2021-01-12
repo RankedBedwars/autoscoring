@@ -18,7 +18,7 @@ let set = false;
 let players = [];
 let pTemp = [...players];
 let botInviteList = players.map(p => p.minecraft.name);
-let team1 = botInviteList.slice(0, 4);
+let team1 = botInviteList.slice(0, (players.length) / 2);
 let team2 = botInviteList.slice(4);
 let greenTeam = [];
 let redTeam = [];
@@ -28,11 +28,15 @@ bot.on("login", () => {
     console.log(`${bot.username} --> Online!`);
     socket = socket_io_client_1.io(`http://localhost:${process.env.SOCKET_PORT}/?key=${process.env.SOCKET_KEY}&bot=${bot.username}`);
     socket.on("gameStart", (data) => {
-        players = data.players;
+        const _players = data.players.map(({ data }) => data);
+        players = _players;
+        pTemp = [...players];
+        botInviteList = players.map(p => p.minecraft.name);
+        team1 = botInviteList.slice(0, (players.length) / 2);
+        team2 = botInviteList.slice(4);
     });
 });
 bot.on("message", message => {
-    console.log(`MESSAGE:\n[${message.toString().split('\n')}]\n`);
     const line0 = message.toString().split('\n')[0];
     const line0_arr = line0.split(' ');
     if (message.toString().split('\n').length > 1) {
@@ -226,6 +230,7 @@ function endGame(team) {
             player.bedsLost++;
         }
     });
+    socket.emit("gameFinish", players);
     gameReset();
 }
 function gameReset() {
