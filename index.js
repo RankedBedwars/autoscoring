@@ -1,4 +1,13 @@
-var mineflayer = require('mineflayer');
+"use strict";
+var __spreadArrays = (this && this.__spreadArrays) || function () {
+    for (var s = 0, i = 0, il = arguments.length; i < il; i++) s += arguments[i].length;
+    for (var r = Array(s), k = 0, i = 0; i < il; i++)
+        for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++)
+            r[k] = a[j];
+    return r;
+};
+exports.__esModule = true;
+var mineflayer = require("mineflayer");
 var ranks = ['[VIP]', '[VIP+]', '[MVP]', '[MVP+]', '[MVP++]', '[YOUTUBE]', '[HELPER]', '[MOD]', '[ADMIN]'];
 var bot = mineflayer.createBot({
     host: 'mc.hypixel.net',
@@ -7,43 +16,17 @@ var bot = mineflayer.createBot({
     password: 'Hibbert66!'
 });
 var set = false;
+var players = [];
+var pTemp = __spreadArrays(players);
+var botInviteList = players.map(function (p) { return p.minecraft.name; });
+var team1 = botInviteList.slice(0, 4);
+var team2 = botInviteList.slice(4);
+var greenTeam = [];
+var redTeam = [];
+var peopleWhoBrokeBeds = [];
 bot.on("login", function () {
     console.log(bot.username + " --> Online!");
 });
-// setup these variables when game starts
-var p1 = {
-    minecraft: {
-        name: 'HaxPigman'
-    },
-    wins: 0,
-    losses: 0,
-    winstreak: 0,
-    bedsStreak: 0,
-    kills: 0,
-    deaths: 0,
-    bedsLost: 0,
-    bedsBroken: 0
-};
-var p2 = {
-    minecraft: {
-        name: 'LaggyIndian'
-    },
-    wins: 0,
-    losses: 0,
-    winstreak: 0,
-    bedsStreak: 0,
-    kills: 0,
-    deaths: 0,
-    bedsLost: 0,
-    bedsBroken: 0
-};
-var players = [p1, p2];
-var botInviteList = players.map(function (p) { return p.minecraft.name; }); // shd remain this
-var team1 = [botInviteList[0]];
-var team2 = [botInviteList[1]];
-var greenTeam = []; // shd be empty
-var redTeam = []; // shd be empty
-var peopleWhoBrokeBeds = [];
 bot.on("message", function (message) {
     console.log("MESSAGE:\n[" + message.toString().split('\n') + "]\n");
     var line0 = message.toString().split('\n')[0];
@@ -71,6 +54,9 @@ bot.on("message", function (message) {
     var greenPos = motD.indexOf('§a');
     var redPos = motD.indexOf('§c');
     // Final Kill, Normal Kill + Death, Normal Death, Bed Break, GameStart, GameEnd
+    if (line0 === 'All beds have been destroyed!') {
+        return peopleWhoBrokeBeds.push('null');
+    }
     // Final Kill
     if (line0.endsWith('FINAL KILL!')) {
         var ign = line0_arr.slice(-3, -2)[0].slice(0, -1);
@@ -98,7 +84,13 @@ bot.on("message", function (message) {
                 }
             }
             set = true;
-            return findPlayer(line0_arr[0]).deaths++;
+            try {
+                return findPlayer(line0_arr[0]).deaths++;
+            }
+            catch (_a) {
+                gameReset();
+                return errorMsg();
+            }
         }
         var p = findPlayer(ign);
         if (!p) {
@@ -129,8 +121,14 @@ bot.on("message", function (message) {
             }
         }
         set = true;
-        p.kills++;
-        return findPlayer(line0_arr[0]).deaths++;
+        try {
+            p.kills++;
+            return findPlayer(line0_arr[0]).deaths++;
+        }
+        catch (_b) {
+            gameReset();
+            return errorMsg();
+        }
     }
     // Bed Destroyed
     else if (line0.startsWith('BED DESTRUCTION >')) {
@@ -143,7 +141,13 @@ bot.on("message", function (message) {
     }
     // Normal Death
     else if (line0.indexOf('fell into the void.') !== -1) {
-        findPlayer(line0_arr[0]).deaths++;
+        try {
+            return findPlayer(line0_arr[0]).deaths++;
+        }
+        catch (_c) {
+            gameReset();
+            return errorMsg();
+        }
     }
     else if (line0 === 'TEAM ELIMINATED > Green Team has been eliminated!') {
         endGame(redTeam);
@@ -180,19 +184,25 @@ bot.on("message", function (message) {
         }
     }
     console.log('teams set');
+    set = true;
     console.log("killer --> " + kill[0] + "\nkillee --> " + kill[1]);
     console.log("Green Team --> " + greenTeam + "\nRed Team --> " + redTeam);
-    findPlayer(kill[0]).kills++;
-    findPlayer(kill[1]).deaths++;
-    set = true;
+    try {
+        findPlayer(kill[0]).kills++;
+        return findPlayer(kill[1]).deaths++;
+    }
+    catch (_d) {
+        gameReset();
+        return errorMsg();
+    }
 });
 function findPlayer(ign) {
     return players.find(function (player) { return player.minecraft.name === ign; });
 }
 function endGame(team) {
-    if (team.length === 0) {
-        bot.chat('/pc join Red and Green team only. Please join a new game.');
-        return setTimeout(function () { return bot.chat('/lobby'); }, 2000);
+    if (peopleWhoBrokeBeds.length === 0) {
+        bot.chat('Game is being requeued.');
+        gameReset();
     }
     bot.chat('/pc Great game guys! Svee says have a good day <3');
     setTimeout(function () { return bot.chat('/p leave'); }, 1000);
@@ -218,10 +228,17 @@ function endGame(team) {
         else if (!team.includes(player.minecraft.name)) {
             player.bedsLost++;
         }
-        // emit event
     });
-    console.log(p1);
-    console.log(p2);
+    //emit(players);
+    gameReset();
+}
+function gameReset() {
+    bot.chat('/lobby');
+    redTeam = [];
+    greenTeam = [];
     set = false;
-    peopleWhoBrokeBeds = [];
+    return players = pTemp;
+}
+function errorMsg() {
+    setTimeout(function () { return bot.chat('/pc Bot detected a nick or an alt. Please re-queue or this game will be voided.'); }, 1000);
 }
