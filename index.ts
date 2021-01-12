@@ -10,7 +10,7 @@ let bot = mineflayer.createBot({
 var set = false;
 var players = [];
 var pTemp = [...players];
-var botInviteList = players.map(p => p.minecraft.name); // shd remain this
+var botInviteList = players.map(p => p.minecraft.name);
 var team1 = botInviteList.slice(0, 4);
 var team2 = botInviteList.slice(4);
 var greenTeam = [];
@@ -60,7 +60,7 @@ bot.on("message", message => {
     // Final Kill, Normal Kill + Death, Normal Death, Bed Break, GameStart, GameEnd
 
     if(line0 === 'All beds have been destroyed!') {
-        peopleWhoBrokeBeds.push('null');
+        return peopleWhoBrokeBeds.push('null');
     }
 
     // Final Kill
@@ -265,7 +265,7 @@ function endGame(team) {
 }
 
 function gameReset() {
-    bot.chat('/lobby');
+    setTimeout(() => bot.chat('/lobby'), 1000);
     redTeam = [];
     greenTeam = [];
     set = false;
