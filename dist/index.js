@@ -3,6 +3,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const dotenv_1 = __importDefault(require("dotenv"));
+dotenv_1.default.config();
 const socket_io_client_1 = require("socket.io-client");
 const mineflayer_1 = __importDefault(require("mineflayer"));
 const socket = socket_io_client_1.io(`http://localhost:${process.env.SOCKET_PORT}?key=${process.env.SOCKET_KEY}&bot=${process.env.USERNAME}`);
@@ -26,6 +28,7 @@ bot.on("login", () => {
     console.log(`${bot.username} --> Online!`);
 });
 socket.on("gameStart", (data) => {
+    players = data.players;
 });
 bot.on("message", message => {
     console.log(`MESSAGE:\n[${message.toString().split('\n')}]\n`);

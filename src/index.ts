@@ -1,3 +1,6 @@
+import dotenv from "dotenv";
+dotenv.config();
+
 import { io } from "socket.io-client";
 import mineflayer from "mineflayer";
 import type { Player } from "./Player";
@@ -28,7 +31,7 @@ bot.on("login", () => {
 });
 
 socket.on("gameStart", (data: GameStart) => {
-    // data.players
+    players = data.players;
 });
 
 bot.on("message", message => {
