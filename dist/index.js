@@ -7,7 +7,6 @@ const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
 const socket_io_client_1 = require("socket.io-client");
 const mineflayer_1 = __importDefault(require("mineflayer"));
-const socket = socket_io_client_1.io(`http://localhost:${process.env.SOCKET_PORT}?key=${process.env.SOCKET_KEY}&bot=${process.env.USERNAME}`);
 const ranks = ['[VIP]', '[VIP+]', '[MVP]', '[MVP+]', '[MVP++]', '[YOUTUBE]', '[HELPER]', '[MOD]', '[ADMIN]'];
 let bot = mineflayer_1.default.createBot({
     host: 'mc.hypixel.net',
@@ -24,11 +23,13 @@ let team2 = botInviteList.slice(4);
 let greenTeam = [];
 let redTeam = [];
 let peopleWhoBrokeBeds = [];
+let socket;
 bot.on("login", () => {
     console.log(`${bot.username} --> Online!`);
-});
-socket.on("gameStart", (data) => {
-    players = data.players;
+    socket = socket_io_client_1.io(`http://localhost:${process.env.SOCKET_PORT}/?key=${process.env.SOCKET_KEY}&bot=${bot.username}`);
+    socket.on("gameStart", (data) => {
+        players = data.players;
+    });
 });
 bot.on("message", message => {
     console.log(`MESSAGE:\n[${message.toString().split('\n')}]\n`);

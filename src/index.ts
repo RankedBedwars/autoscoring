@@ -1,12 +1,10 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-import { io } from "socket.io-client";
+import { io, Socket } from "socket.io-client";
 import mineflayer from "mineflayer";
 import type { Player } from "./Player";
 import type { GameStart } from "./Events";
-
-const socket = io(`http://localhost:${process.env.SOCKET_PORT!}?key=${process.env.SOCKET_KEY!}&bot=${process.env.USERNAME!}`);
 
 const ranks = ['[VIP]', '[VIP+]', '[MVP]', '[MVP+]', '[MVP++]', '[YOUTUBE]', '[HELPER]', '[MOD]', '[ADMIN]'];
 let bot = mineflayer.createBot({
@@ -26,12 +24,14 @@ let greenTeam: string[] = [];
 let redTeam: string[] = []; 
 let peopleWhoBrokeBeds: string[] = [];
 
+let socket: Socket;
+
 bot.on("login", () => {
     console.log(`${bot.username} --> Online!`);
-});
-
-socket.on("gameStart", (data: GameStart) => {
-    players = data.players;
+    socket = io(`http://localhost:${process.env.SOCKET_PORT!}/?key=${process.env.SOCKET_KEY!}&bot=${bot.username}`);
+    socket.on("gameStart", (data: GameStart) => {
+        players = data.players;
+    });
 });
 
 bot.on("message", message => {
