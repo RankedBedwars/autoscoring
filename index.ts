@@ -1,4 +1,4 @@
-const mineflayer = require('mineflayer');
+import mineflayer = require('mineflayer');
 const ranks = ['[VIP]', '[VIP+]', '[MVP]', '[MVP+]', '[MVP++]', '[YOUTUBE]', '[HELPER]', '[MOD]', '[ADMIN]'];
 let bot = mineflayer.createBot({
     host: 'mc.hypixel.net',
@@ -6,50 +6,20 @@ let bot = mineflayer.createBot({
     username: 'luddezwallin@gmail.com',
     password: 'Hibbert66!',
 })
-let set = false;
 
+var set = false;
+var players = [];
+var pTemp = [...players];
+var botInviteList = players.map(p => p.minecraft.name); // shd remain this
+var team1 = botInviteList.slice(0, 4);
+var team2 = botInviteList.slice(4);
+var greenTeam = [];
+var redTeam = []; 
+var peopleWhoBrokeBeds = [];
 
 bot.on("login", () => {
     console.log(`${bot.username} --> Online!`);
 })
-
-// setup these variables when game starts
-
-const p1 = {
-    minecraft: {
-        name: 'HaxPigman',
-    },
-    wins: 0,
-    losses: 0,
-    winstreak: 0,
-    bedsStreak: 0,
-    kills: 0,
-    deaths: 0,
-    bedsLost: 0,
-    bedsBroken: 0,
-}
-
-const p2 = {
-    minecraft: {
-        name: 'LaggyIndian',
-    },
-    wins: 0,
-    losses: 0,
-    winstreak: 0,
-    bedsStreak: 0,
-    kills: 0,
-    deaths: 0,
-    bedsLost: 0,
-    bedsBroken: 0,
-}
-
-var players = [p1, p2];
-const botInviteList = players.map(p => p.minecraft.name); // shd remain this
-const team1 = [botInviteList[0]];
-const team2 = [botInviteList[1]];
-let greenTeam = []; // shd be empty
-let redTeam = []; // shd be empty
-let peopleWhoBrokeBeds = [];
 
 bot.on("message", message => {
 
@@ -89,6 +59,10 @@ bot.on("message", message => {
 
     // Final Kill, Normal Kill + Death, Normal Death, Bed Break, GameStart, GameEnd
 
+    if(line0 === 'All beds have been destroyed!') {
+        peopleWhoBrokeBeds.push('null');
+    }
+
     // Final Kill
     if(line0.endsWith('FINAL KILL!')) {
         var ign = line0_arr.slice(-3, -2)[0].slice(0, -1);
@@ -116,7 +90,13 @@ bot.on("message", message => {
                 }
             }
             set = true;
-            return findPlayer(line0_arr[0]).deaths++;
+            try {
+                return findPlayer(line0_arr[0]).deaths++;
+            }
+            catch {
+                gameReset();
+                return errorMsg();
+            }
         }
 
         let p = findPlayer(ign);
@@ -152,8 +132,14 @@ bot.on("message", message => {
 
         set = true;
 
-        p.kills++;
-        return findPlayer(line0_arr[0]).deaths++;
+        try {
+            p.kills++;
+            return findPlayer(line0_arr[0]).deaths++;
+        }
+        catch {
+            gameReset();
+            return errorMsg();
+        }
     }
 
     // Bed Destroyed
@@ -164,13 +150,18 @@ bot.on("message", message => {
     // Actual Game Start
     else if(line0.trim() === 'Protect your bed and destroy the enemy beds.') {
         setTimeout(() => bot.chat('/lobby'), 2000);
-
         setTimeout(() => bot.chat('/rejoin'), 3000);
     }
 
     // Normal Death
     else if(line0.indexOf('fell into the void.') !== -1) {
-        findPlayer(line0_arr[0]).deaths++;
+        try {
+            return findPlayer(line0_arr[0]).deaths++;
+        }
+        catch {
+            gameReset();
+            return errorMsg();
+        }
     }
 
     else if(line0 === 'TEAM ELIMINATED > Green Team has been eliminated!') {
@@ -214,12 +205,19 @@ bot.on("message", message => {
     }
 
     console.log('teams set');
+    set = true;
 
     console.log(`killer --> ${kill[0]}\nkillee --> ${kill[1]}`);
-        console.log(`Green Team --> ${greenTeam}\nRed Team --> ${redTeam}`);
+    console.log(`Green Team --> ${greenTeam}\nRed Team --> ${redTeam}`);
+    try {
         findPlayer(kill[0]).kills++;
-        findPlayer(kill[1]).deaths++;
-        set = true;
+        return findPlayer(kill[1]).deaths++;
+    }
+    catch {
+        gameReset();
+        return errorMsg();
+    }
+    
 })
 
 function findPlayer(ign) {
@@ -227,9 +225,9 @@ function findPlayer(ign) {
 }
 
 function endGame(team) {
-    if(team.length === 0) {
-        bot.chat('/pc join Red and Green team only. Please join a new game.');
-        return setTimeout(() => bot.chat('/lobby'), 2000);
+    if(peopleWhoBrokeBeds.length === 0) {
+        bot.chat('Game is being requeued.');
+        gameReset();
     }
 
     bot.chat('/pc Great game guys! Svee says have a good day <3');
@@ -259,12 +257,21 @@ function endGame(team) {
         }
         else if(!team.includes(player.minecraft.name)) {
             player.bedsLost++;
-        }
-
-        // emit event
+        }        
     })
-    console.log(p1);
-    console.log(p2);
+
+    //emit(players);
+    gameReset();
+}
+
+function gameReset() {
+    bot.chat('/lobby');
+    redTeam = [];
+    greenTeam = [];
     set = false;
-    peopleWhoBrokeBeds = [];
+    return players = pTemp;
+}
+
+function errorMsg() {
+    setTimeout(() => bot.chat('/pc Bot detected a nick or an alt. Please re-queue or this game will be voided.'), 1000);
 }
