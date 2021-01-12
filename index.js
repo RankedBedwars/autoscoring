@@ -233,7 +233,7 @@ function endGame(team) {
     gameReset();
 }
 function gameReset() {
-    bot.chat('/lobby');
+    setTimeout(function () { return bot.chat('/lobby'); }, 1000);
     redTeam = [];
     greenTeam = [];
     set = false;
