@@ -16,27 +16,31 @@ let bot = mineflayer.createBot({
 
 let set = false;
 let players: Player[] = [];
-let pTemp = [...players];
-let botInviteList = players.map(p => p.minecraft.name);
-let team1 = botInviteList.slice(0, (players.length) / 2);
-let team2 = botInviteList.slice(4);
+let pTemp: Player[] = [];
+let botInviteList: string[] = [];
+let team1: string[] = [];
+let team2: string[] = [];
 let greenTeam: string[] = [];
 let redTeam: string[] = []; 
 let peopleWhoBrokeBeds: string[] = [];
 
 let socket: Socket;
+let gameStarted = false;
+let gameEnded = false;
 
 bot.on("login", () => {
     console.log(`${bot.username} --> Online!`);
     socket = io(`http://localhost:${process.env.SOCKET_PORT!}/?key=${process.env.SOCKET_KEY!}&bot=${bot.username}`);
     socket.on("gameStart", (data: GameStart) => {
-        const _players = data.players.map(({ data }) => data);
+        const _players = data.players;
+        console.log(`Received data: ${JSON.stringify(data.players)}`);
         players = _players;
         pTemp = [...players];
         botInviteList = players.map(p => p.minecraft.name);
         team1 = botInviteList.slice(0, (players.length) / 2);
-        team2 = botInviteList.slice(4);
+        team2 = botInviteList.slice(players.length / 2);
     });
+    setTimeout(() => bot.chat("/p leave"), 1000);
 });
 
 bot.on("message", message => {
@@ -49,7 +53,6 @@ bot.on("message", message => {
         
         const line1 = message.toString().split('\n')[1];
         const line1_arr = line1.split(' ');
-        console.log(line1_arr);
 
         if(ranks.includes(line1_arr[0]) && line1_arr[3] === 'invited' && line1_arr[4] === 'you' && botInviteList.includes(line1_arr[1])) {
           bot.chat(`/party accept ${line1_arr[1]}`);        
@@ -79,13 +82,20 @@ bot.on("message", message => {
         return peopleWhoBrokeBeds.push('null');
     }
 
+    if(line0.endsWith("died.")){
+        const p = findPlayer(line0_arr[0]);
+        if(p) return p.deaths!++;
+        errorMsg(line0_arr[0]);
+        return gameReset();
+    }
+
     // Final Kill
     if(line0.endsWith('FINAL KILL!')) {
         var ign = line0_arr.slice(-3, -2)[0].slice(0, -1);
-        if (ign === 'void') {
+        if (ign === 'void' || ign === 'died') {
             if(!set) {
                 if(greenPos !== -1) {
-                    if(players.findIndex(p => p.minecraft.name === line0_arr[0]) <= 0) {
+                    if(players.findIndex(p => p.minecraft.name === line0_arr[0]) < (players.length / 2)) {
                         greenTeam = team1;
                         redTeam = team2;
                     }
@@ -95,7 +105,7 @@ bot.on("message", message => {
                     }
                 }
                 else {
-                    if(players.findIndex(p => p.minecraft.name === line0_arr[0]) <= 0) {
+                    if(players.findIndex(p => p.minecraft.name === line0_arr[0]) < (players.length / 2)) {
                         redTeam = team1;
                         greenTeam = team2;
                     }
@@ -110,8 +120,8 @@ bot.on("message", message => {
                 return findPlayer(line0_arr[0])!.deaths!++;
             }
             catch {
-                gameReset();
-                return errorMsg();
+                errorMsg(line0_arr[0]);
+                return gameReset();
             }
         }
 
@@ -153,8 +163,8 @@ bot.on("message", message => {
             return findPlayer(line0_arr[0])!.deaths!++;
         }
         catch {
-            gameReset();
-            return errorMsg();
+            errorMsg(line0_arr[0]);
+            return gameReset();
         }
     }
 
@@ -165,6 +175,7 @@ bot.on("message", message => {
 
     // Actual Game Start
     else if(line0.trim() === 'Protect your bed and destroy the enemy beds.') {
+        gameStarted = true;
         setTimeout(() => bot.chat('/lobby'), 2000);
         setTimeout(() => bot.chat('/rejoin'), 3000);
     }
@@ -175,8 +186,8 @@ bot.on("message", message => {
             return findPlayer(line0_arr[0])!.deaths!++;
         }
         catch {
-            gameReset();
-            return errorMsg();
+            errorMsg(line0_arr[0]);
+            return gameReset();
         }
     }
 
@@ -227,11 +238,17 @@ bot.on("message", message => {
     console.log(`Green Team --> ${greenTeam}\nRed Team --> ${redTeam}`);
     try {
         findPlayer(kill[0])!.kills!++;
+    }
+    catch {
+        errorMsg(kill[0]);
+        return gameReset();
+    }
+    try {
         return findPlayer(kill[1])!.deaths!++;
     }
     catch {
-        gameReset();
-        return errorMsg();
+        errorMsg(kill[1]);
+        return gameReset();
     }
     
 })
@@ -242,9 +259,12 @@ function findPlayer(ign: string) {
 
 function endGame(team: string[]) {
     if(peopleWhoBrokeBeds.length === 0) {
-        bot.chat('Game is being requeued.');
+        gameStarted = false;
+        bot.chat('/pc Game is being requeued.');
         gameReset();
     }
+    if(gameEnded) return;
+    gameEnded = true;
 
     bot.chat('/pc Great game guys! Svee says have a good day <3');
     setTimeout(() => bot.chat('/p leave'), 1000);
@@ -276,18 +296,23 @@ function endGame(team: string[]) {
         }        
     })
 
+    console.log(`Game finished, sending back: ${JSON.stringify(players)}`);
     socket.emit("gameFinish", players);
+    botInviteList = [];
     gameReset();
 }
 
 function gameReset() {
-    setTimeout(() => bot.chat('/lobby'), 1000);
+    setTimeout(() => bot.chat('/lobby'), 3000);
+    gameStarted = false;
+    gameEnded = false;
+    peopleWhoBrokeBeds = [];
     redTeam = [];
     greenTeam = [];
     set = false;
     return players = pTemp;
 }
 
-function errorMsg() {
-    setTimeout(() => bot.chat('/pc Bot detected a nick or an alt. Please re-queue or this game will be voided.'), 1000);
+function errorMsg(ign: string) {
+    setTimeout(() => bot.chat(`/pc Bot detected that ${ign} is nicked or is an alt. Please re-queue or this game will be voided.`), 1000);
 }
