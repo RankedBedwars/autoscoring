@@ -88,7 +88,7 @@ bot.on("message", message => {
         Object.values(bot.players).forEach(player => {
             console.log(player);
             console.log(player.displayName.toString());
-            if(![...botInviteList, bot.username].includes(player.displayName.toString())) {
+            if(![...botInviteList, bot.username].includes(player.displayName.toString()) && player.ping === 1) {
                 errorMsg(player.username);
                 return gameReset();
             }

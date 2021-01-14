@@ -70,7 +70,7 @@ bot.on("message", message => {
         setTimeout(() => Object.values(bot.players).forEach(player => {
             console.log(player);
             console.log(player.displayName.toString());
-            if (![...botInviteList, bot.username].includes(player.displayName.toString())) {
+            if (![...botInviteList, bot.username].includes(player.displayName.toString()) && player.ping === 1) {
                 errorMsg(player.username);
                 return gameReset();
             }
@@ -232,8 +232,8 @@ function findPlayer(ign) {
 function endGame(team) {
     if (peopleWhoBrokeBeds.length === 0) {
         gameStarted = false;
-        bot.chat('/pc Game is being requeued.');
-        gameReset();
+        bot.chat('/pc Game has to be re-queued.');
+        return gameReset();
     }
     if (gameEnded)
         return;
@@ -280,7 +280,7 @@ function gameReset() {
 }
 function errorMsg(ign) {
     if (ign === '') {
-        return setTimeout(() => bot.chat(`/pc Bot detected that there is a nick or an alt in the game. Please re-queue or this game will be voided.`), 1000);
+        return setTimeout(() => bot.chat(`/pc Bot detected that there is a nick or an alt in the game. Please requeue or game will be voided.`), 1000);
     }
-    setTimeout(() => bot.chat(`/pc Bot detected that ${ign} is nicked or is an alt. Please re-queue or this game will be voided.`), 1000);
+    setTimeout(() => bot.chat(`/pc Bot detected that ${ign} is nicked or is an alt. Please requeue or game will be voided.`), 1000);
 }
