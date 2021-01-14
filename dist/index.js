@@ -63,6 +63,9 @@ bot.on("message", message => {
     const motD = message.toMotd();
     const greenPos = motD.indexOf('§a');
     const redPos = motD.indexOf('§c');
+    if (!gameStarted) {
+        return;
+    }
     if (line0 === 'All beds have been destroyed!') {
         return peopleWhoBrokeBeds.push('null');
     }
@@ -111,7 +114,8 @@ bot.on("message", message => {
         if (!p) {
             p = findPlayer(line0_arr.slice(-5, -4)[0].slice(0, -2));
             if (!p) {
-                return console.log(p);
+                errorMsg('');
+                return gameReset();
             }
         }
         if (motD.indexOf('§c') < motD.indexOf('§a') && !set) {
@@ -152,6 +156,12 @@ bot.on("message", message => {
         gameStarted = true;
         setTimeout(() => bot.chat('/lobby'), 2000);
         setTimeout(() => bot.chat('/rejoin'), 3000);
+        Object.values(bot.players).forEach(player => {
+            if (!botInviteList.includes(player.displayName.toString())) {
+                errorMsg(bot.username);
+                gameReset();
+            }
+        });
     }
     else if (line0.indexOf('fell into the void.') !== -1) {
         try {
@@ -267,5 +277,8 @@ function gameReset() {
     return players = pTemp;
 }
 function errorMsg(ign) {
+    if (ign === '') {
+        return setTimeout(() => bot.chat(`/pc Bot detected that there is a nick or an alt in the game. Please re-queue or this game will be voided.`), 1000);
+    }
     setTimeout(() => bot.chat(`/pc Bot detected that ${ign} is nicked or is an alt. Please re-queue or this game will be voided.`), 1000);
 }
