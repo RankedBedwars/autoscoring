@@ -330,7 +330,7 @@ function gameReset() {
 
 function errorMsg(ign: string) {
     if(ign === '') {
-        return setTimeout(() => bot.chat(`/pc Bot detected that there is a nick or an alt in the game. Please re-queue or this game will be voided.`), 1000);    
+        return setTimeout(() => bot.chat(`/pc Bot detected that there is a nick or an alt in the game. Please requeue or game will be voided.`), 1000);    
     }
-    setTimeout(() => bot.chat(`/pc Bot detected that ${ign} is nicked or is an alt. Please re-queue or this game will be voided.`), 1000);
+    setTimeout(() => bot.chat(`/pc Bot detected that ${ign} is nicked or is an alt. Please requeue or game will be voided.`), 1000);
 }
