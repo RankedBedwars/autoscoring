@@ -78,6 +78,23 @@ bot.on("message", message => {
 
     // Final Kill, Normal Kill + Death, Normal Death, Bed Break, GameStart, GameEnd
 
+    if(line0.trim() === 'Protect your bed and destroy the enemy beds.') {
+        gameStarted = true;
+        setTimeout(() => bot.chat('/lobby'), 2000);
+        setTimeout(() => bot.chat('/rejoin'), 3000);
+
+        setTimeout(() => 
+        
+        Object.values(bot.players).forEach(player => {
+            console.log(player);
+            console.log(player.displayName.toString());
+            if(![...botInviteList, bot.username].includes(player.displayName.toString())) {
+                errorMsg(player.username);
+                return gameReset();
+            }
+        }), 5500);
+    }
+
     if(!gameStarted) {
         return;
     }
@@ -178,20 +195,6 @@ bot.on("message", message => {
         peopleWhoBrokeBeds.push(line0_arr.slice(-1)[0].slice(0, -1));
     }
 
-    // Actual Game Start
-    else if(line0.trim() === 'Protect your bed and destroy the enemy beds.') {
-        gameStarted = true;
-        setTimeout(() => bot.chat('/lobby'), 2000);
-        setTimeout(() => bot.chat('/rejoin'), 3000);
-
-        Object.values(bot.players).forEach(player => {
-            if(!botInviteList.includes(player.displayName.toString())) {
-                errorMsg(bot.username);
-                gameReset();
-            }
-        })
-    }
-
     // Normal Death
     else if(line0.indexOf('fell into the void.') !== -1) {
         try {
@@ -272,8 +275,8 @@ function findPlayer(ign: string) {
 function endGame(team: string[]) {
     if(peopleWhoBrokeBeds.length === 0) {
         gameStarted = false;
-        bot.chat('/pc Game is being requeued.');
-        gameReset();
+        bot.chat('/pc Game has to be re-queued.');
+        return gameReset();
     }
     if(gameEnded) return;
     gameEnded = true;
