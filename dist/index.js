@@ -358,6 +358,10 @@ function endGame(team) {
     console.log(`Game finished, sending back: ${JSON.stringify(players)}`);
     socket.emit("gameFinish", players);
     botInviteList = [];
+    players = [];
+    players2 = {};
+    chat = [];
+    in_party = [];
     gameReset();
 }
 function gameReset() {
