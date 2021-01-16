@@ -446,8 +446,8 @@ setInterval(() => {
 
 setInterval(() => {
     if(botAssigned) {
-        chat.push("/p "+Object.keys(players).slice(0, players.length/2).join(" "));
-        chat.push("/p "+Object.keys(players).slice(players.length).join(" "));
+        chat.push("/p "+Object.keys(players2).slice(0, players.length/2).join(" "));
+        chat.push("/p "+Object.keys(players2).slice(players.length).join(" "));
         botAssigned = false;
         console.log('Partied people.');
     }
