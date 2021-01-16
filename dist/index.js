@@ -75,6 +75,7 @@ bot.on("message", message => {
         else if (line1_arr[2] === 'invited' && line1_arr[3] === 'you' && botInviteList.includes(line1_arr[0])) {
             bot.chat(`/p accept ${line1_arr[0]}`);
         }
+        return;
     }
     if (line0.includes(':')) {
         return;
