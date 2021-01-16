@@ -447,6 +447,7 @@ setInterval(() => {
     if(botAssigned) {
         chat.push("/p "+Object.keys(players2).slice(0, players.length/2).join(" "));
         chat.push("/p "+Object.keys(players2).slice(players.length/2).join(" "));
+        chat.push("/p settings allinvite");
         botAssigned = false;
         console.log('Partied people.');
     }
