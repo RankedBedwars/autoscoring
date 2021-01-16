@@ -28,6 +28,7 @@ let mapChecked;
 let players2 = {};
 let in_party = [];
 let chat = [];
+let botAssigned = false;
 let socket;
 let gameStarted = false;
 let gameEnded = false;
@@ -50,12 +51,13 @@ bot.on("login", () => {
         players.forEach(player => {
             players2[player.minecraft.name] = { status: null, tries: 0 };
         });
-        chat.push("/p " + Object.keys(players).slice(0, players.length / 2).join(" "));
-        chat.push("/p " + Object.keys(players).slice(players.length).join(" "));
+        botAssigned = true;
+        console.log('Game Started');
     });
     setTimeout(() => bot.chat("/p leave"), 1000);
 });
 bot.on("message", message => {
+    console.log(message.toString().split(' '));
     const line0 = message.toString().split('\n')[0];
     const line0_arr = line0.split(' ');
     if (message.toString().split('\n').length > 1) {
@@ -369,6 +371,8 @@ function gameReset() {
     greenTeam = [];
     set = false;
     mapChecked = false;
+    botAssigned = false;
+    ``;
     return players = pTemp;
 }
 function errorMsg(ign) {
@@ -381,3 +385,11 @@ setInterval(() => {
     if (chat.length)
         bot.chat(chat.shift());
 }, 800);
+setInterval(() => {
+    if (botAssigned) {
+        chat.push("/p " + Object.keys(players).slice(0, players.length / 2).join(" "));
+        chat.push("/p " + Object.keys(players).slice(players.length).join(" "));
+        botAssigned = false;
+        console.log('Partied people.');
+    }
+}, 5000);

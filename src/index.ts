@@ -56,12 +56,15 @@ bot.on("login", () => {
         })
 
         botAssigned = true;
+        console.log('Game Started');
     });
     setTimeout(() => bot.chat("/p leave"), 1000);
 });
 
 bot.on("message", message => {
     
+    console.log(message.toString().split(' '));
+
     const line0 = message.toString().split('\n')[0];
     const line0_arr = line0.split(' ');
 
@@ -426,7 +429,7 @@ function gameReset() {
     greenTeam = [];
     set = false;
     mapChecked = false;
-    botAssigned = false;
+    botAssigned = false;``
     return players = pTemp;
 }
 
@@ -446,5 +449,6 @@ setInterval(() => {
         chat.push("/p "+Object.keys(players).slice(0, players.length/2).join(" "));
         chat.push("/p "+Object.keys(players).slice(players.length).join(" "));
         botAssigned = false;
+        console.log('Partied people.');
     }
 }, 5000)
