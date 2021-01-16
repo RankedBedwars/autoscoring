@@ -28,6 +28,7 @@ let mapChecked: boolean;
 let players2: { [key: string]: any } = {};
 let in_party: any[] = [];
 let chat: string[] = [];
+let botAssigned = false;
 
 let socket: Socket;
 let gameStarted = false;
@@ -54,8 +55,7 @@ bot.on("login", () => {
             players2[player.minecraft.name] = {status: null, tries: 0};
         })
 
-        chat.push("/p "+Object.keys(players).slice(0, players.length/2).join(" "));
-        chat.push("/p "+Object.keys(players).slice(players.length).join(" "));
+        botAssigned = true;
     });
     setTimeout(() => bot.chat("/p leave"), 1000);
 });
@@ -426,6 +426,7 @@ function gameReset() {
     greenTeam = [];
     set = false;
     mapChecked = false;
+    botAssigned = false;
     return players = pTemp;
 }
 
@@ -439,3 +440,11 @@ function errorMsg(ign: string) {
 setInterval(() => {
     if (chat.length) bot.chat(chat.shift()!);
 }, 800);
+
+setInterval(() => {
+    if(botAssigned) {
+        chat.push("/p "+Object.keys(players).slice(0, players.length/2).join(" "));
+        chat.push("/p "+Object.keys(players).slice(players.length).join(" "));
+        botAssigned = false;
+    }
+}, 5000)
