@@ -39,7 +39,6 @@ bot.on("login", () => {
     socket.on("gameStart", (data) => {
         const _players = data.players;
         const _map = data.map;
-        console.log(`Received data: ${JSON.stringify(data.players)}`);
         players = _players;
         pTemp = [...players];
         botInviteList = players.map(p => p.minecraft.name);
@@ -157,14 +156,10 @@ bot.on("message", message => {
         setTimeout(() => bot.chat('/rejoin'), 5000);
         setTimeout(() => {
             Object.values(bot.players).forEach(player => {
-                console.log(player.displayName.toString());
                 if (![...botInviteList, bot.username].includes(player.displayName.toString()) && player.ping === 1) {
                     errorMsg(player.username);
                     return gameReset();
                 }
-            });
-            Object.values(bot.players).forEach(player => {
-                console.log(player);
             });
             if (timeout)
                 clearTimeout(timeout);
@@ -234,7 +229,6 @@ bot.on("message", message => {
                 greenTeam = team1;
                 redTeam = team2;
             }
-            console.log('teams set');
         }
         else if (!set) {
             if (team1.includes(line0_arr[0])) {
@@ -301,10 +295,7 @@ bot.on("message", message => {
             redTeam = team2;
         }
     }
-    console.log('teams set');
     set = true;
-    console.log(`killer --> ${kill[0]}\nkillee --> ${kill[1]}`);
-    console.log(`Green Team --> ${greenTeam}\nRed Team --> ${redTeam}`);
     try {
         findPlayer(kill[0]).kills++;
     }
@@ -394,6 +385,5 @@ setInterval(() => {
         chat.push("/p " + Object.keys(players2).slice(0, players.length / 2).join(" "));
         chat.push("/p " + Object.keys(players2).slice(players.length / 2).join(" "));
         botAssigned = false;
-        console.log('Partied people.');
     }
 }, 5000);
