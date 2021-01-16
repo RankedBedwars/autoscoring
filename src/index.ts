@@ -30,7 +30,7 @@ let gameEnded = false;
 
 bot.on("login", () => {
     console.log(`${bot.username} --> Online!`);
-    socket = io(`http://localhost:${process.env.SOCKET_PORT!}/?key=${process.env.SOCKET_KEY!}&bot=${bot.username}`);
+    socket = io(`http://${process.env.LOCAL_SOCKET ? "localhost" : "rbw-s1.slicknicky10.me"}:${process.env.SOCKET_PORT!}/?key=${process.env.SOCKET_KEY!}&bot=${bot.username}`);
     socket.on("gameStart", (data: GameStart) => {
         const _players = data.players;
         console.log(`Received data: ${JSON.stringify(data.players)}`);
@@ -86,7 +86,6 @@ bot.on("message", message => {
         setTimeout(() => 
         
         Object.values(bot.players).forEach(player => {
-            console.log(player);
             console.log(player.displayName.toString());
             if(![...botInviteList, bot.username].includes(player.displayName.toString()) && player.ping === 1) {
                 errorMsg(player.username);
