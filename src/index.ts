@@ -34,6 +34,8 @@ let socket: Socket;
 let gameStarted = false;
 let gameEnded = false;
 
+let timeout: NodeJS.Timeout | undefined;
+
 bot.on("login", () => {
     console.log(`${bot.username} --> Online!`);
     socket = io(`http://${process.env.LOCAL_SOCKET ? "localhost" : "rbw-s1.slicknicky10.me"}:${process.env.SOCKET_PORT!}/?key=${process.env.SOCKET_KEY!}&bot=${bot.username}`);
@@ -53,10 +55,17 @@ bot.on("login", () => {
 
         players.forEach(player => {
             players2[player.minecraft.name] = {status: null, tries: 0};
-        })
+        });
 
         botAssigned = true;
         console.log('Game Started');
+
+        timeout = setTimeout(() => {
+            if(gameStarted) return;
+            bot.chat("/pc This game took too long to start, and has been canceled.");
+            setTimeout(() => bot.chat("/p leave"), 1000);
+            socket.emit("gameCancel");
+        }, 5 * 60000);
     });
     setTimeout(() => bot.chat("/p leave"), 1000);
 });
@@ -190,6 +199,7 @@ bot.on("message", message => {
             Object.values(bot.players).forEach(player => {
                 console.log(player);
             });
+            if(timeout) clearTimeout(timeout);
         }, 5500);
 
     }
