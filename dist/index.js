@@ -28,7 +28,7 @@ let gameStarted = false;
 let gameEnded = false;
 bot.on("login", () => {
     console.log(`${bot.username} --> Online!`);
-    socket = socket_io_client_1.io(`http://localhost:${process.env.SOCKET_PORT}/?key=${process.env.SOCKET_KEY}&bot=${bot.username}`);
+    socket = socket_io_client_1.io(`http://${process.env.LOCAL_SOCKET ? "localhost" : "rbw-s1.slicknicky10.me"}:${process.env.SOCKET_PORT}/?key=${process.env.SOCKET_KEY}&bot=${bot.username}`);
     socket.on("gameStart", (data) => {
         const _players = data.players;
         console.log(`Received data: ${JSON.stringify(data.players)}`);
@@ -68,13 +68,15 @@ bot.on("message", message => {
         setTimeout(() => bot.chat('/lobby'), 2000);
         setTimeout(() => bot.chat('/rejoin'), 3000);
         setTimeout(() => Object.values(bot.players).forEach(player => {
-            console.log(player);
             console.log(player.displayName.toString());
             if (![...botInviteList, bot.username].includes(player.displayName.toString())) {
                 errorMsg(player.username);
                 return gameReset();
             }
         }), 5500);
+        Object.values(bot.players).forEach(player => {
+            console.log(player);
+        });
     }
     if (!gameStarted) {
         return;
@@ -232,8 +234,8 @@ function findPlayer(ign) {
 function endGame(team) {
     if (peopleWhoBrokeBeds.length === 0) {
         gameStarted = false;
-        bot.chat('/pc Game is being requeued.');
-        gameReset();
+        bot.chat('/pc Game has to be re-queued.');
+        return gameReset();
     }
     if (gameEnded)
         return;
@@ -280,7 +282,7 @@ function gameReset() {
 }
 function errorMsg(ign) {
     if (ign === '') {
-        return setTimeout(() => bot.chat(`/pc Bot detected that there is a nick or an alt in the game. Please re-queue or this game will be voided.`), 1000);
+        return setTimeout(() => bot.chat(`/pc Bot detected that there is a nick or an alt in the game. Please requeue or game will be voided.`), 1000);
     }
-    setTimeout(() => bot.chat(`/pc Bot detected that ${ign} is nicked or is an alt. Please re-queue or this game will be voided.`), 1000);
+    setTimeout(() => bot.chat(`/pc Bot detected that ${ign} is nicked or is an alt. Please requeue or game will be voided.`), 1000);
 }
