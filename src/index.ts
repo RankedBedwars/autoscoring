@@ -23,6 +23,8 @@ let team2: string[] = [];
 let greenTeam: string[] = [];
 let redTeam: string[] = []; 
 let peopleWhoBrokeBeds: string[] = [];
+let map: string;
+let mapChecked: boolean;
 
 let socket: Socket;
 let gameStarted = false;
@@ -33,12 +35,15 @@ bot.on("login", () => {
     socket = io(`http://${process.env.LOCAL_SOCKET ? "localhost" : "rbw-s1.slicknicky10.me"}:${process.env.SOCKET_PORT!}/?key=${process.env.SOCKET_KEY!}&bot=${bot.username}`);
     socket.on("gameStart", (data: GameStart) => {
         const _players = data.players;
+        const _map = data.map;
         console.log(`Received data: ${JSON.stringify(data.players)}`);
         players = _players;
         pTemp = [...players];
         botInviteList = players.map(p => p.minecraft.name);
         team1 = botInviteList.slice(0, (players.length) / 2);
         team2 = botInviteList.slice(players.length / 2);
+        map = _map;
+        mapChecked = false;
     });
     setTimeout(() => bot.chat("/p leave"), 1000);
 });
@@ -64,7 +69,22 @@ bot.on("message", message => {
         return;
     }
 
-   if(line0.includes(':')) {
+    if(line0.includes(':')) {
+        return;
+    }
+    
+    if(line0_arr[1] === 'has' && line0_arr[2] === 'joined') {
+        if(!mapChecked) {
+            bot.chat('/map');
+        }
+        return;
+    }   
+
+    if(line0.startsWith('You are currently playing on ')) {
+        if(map !== line0_arr.slice(-1).join("") && !mapChecked) {
+            bot.chat(`Please choose the map ${map} when you join the game instead of ${line0_arr.slice(-1).join("")}.`);
+            return gameReset();
+        }
         return;
     }
 
@@ -328,6 +348,7 @@ function gameReset() {
     redTeam = [];
     greenTeam = [];
     set = false;
+    mapChecked = false;
     return players = pTemp;
 }
 
