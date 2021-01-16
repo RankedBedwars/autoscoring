@@ -74,16 +74,24 @@ bot.on("message", message => {
     const line0 = message.toString().split('\n')[0];
     const line0_arr = line0.split(' ');
 
+    if(line0.includes(':')) {
+        return;
+    }
+
     if (line0.includes("invited") && line0.includes("to the party! They have 60 seconds to accept.")) {
         let invited: string = "", inviter: string = "";
 
         // Store the invited player in a variable
-        if (line0_arr[2].includes("[")) invited = line0_arr[3];
-        else invited = line0_arr[2];
+        if (line0_arr[3].includes("[")) invited = line0_arr[4];
+        else invited = line0_arr[3];
 
         // Store the inviter in a variable
         if (line0_arr[0].includes("[")) inviter = line0_arr[1];
         else inviter = line0_arr[0];
+
+        if(!findPlayer(invited) || !findPlayer(inviter)) {
+            return;
+        }
 
         players2[invited].status = "invited";
         players2[invited].inviter = inviter;
@@ -96,7 +104,7 @@ bot.on("message", message => {
         else expired = line0_arr[4];
 
         // Resend invite if they are supposed to be here 
-        if (Object.keys(players).includes(expired)) {
+        if (findPlayer(expired)) {
             if (players2[expired].tries < 3) {
                 chat.push(`/pc [RBW] ${expired} hasn't joined the party yet. ${3-players2[expired].tries} tries remaining!`)
                 players2[expired].tries++
@@ -116,11 +124,10 @@ bot.on("message", message => {
         }
         else joined = line0_arr[0];
 
-        if (Object.keys(players2).includes(joined)) {
+        if (findPlayer(joined)) {
             players2[joined].status = "joined";
             players2[joined].rank = !rank ? "NON" : rank;
             in_party.push(joined);
-            //chat.push(`/pc [RBW] ${joined} joined the party! (${in_party.length}/8)`)
         }
 
         if (in_party.length === players.length) {
@@ -131,19 +138,15 @@ bot.on("message", message => {
     }
 
     // When a player leaves the party
-    else if (line0.includes("has left the party.") && !line0.includes(":")) {
+    else if (line0.includes("has left the party.")) {
         let left = "";
         if (line0_arr[0].includes("[")) left = line0_arr[1];
         else left = line0_arr[0];
 
-        if (Object.keys(players2).includes(left)) {
+        if (findPlayer(left)) {
             players2[left].status = "left";
             in_party.filter(name => name !== left);
         }
-    }
-
-    if(line0.includes(':')) {
-        return;
     }
     
     if(line0_arr[1] === 'has' && line0_arr[2] === 'joined') {
