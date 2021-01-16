@@ -169,7 +169,7 @@ bot.on("message", message => {
 
     if(line0.startsWith('You are currently playing on ')) {
         if(map !== line0_arr.slice(-1).join("") && !mapChecked) {
-            bot.chat(`Please choose the map ${map} when you join the game instead of ${line0_arr.slice(-1).join("")}.`);
+            bot.chat(`/pc Please choose the map ${map} when you join the game instead of ${line0_arr.slice(-1).join("")}.`);
             return gameReset();
         }
         return;
