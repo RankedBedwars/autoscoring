@@ -65,8 +65,8 @@ bot.on("message", message => {
     const redPos = motD.indexOf('§c');
     if (line0.trim() === 'Protect your bed and destroy the enemy beds.') {
         gameStarted = true;
-        setTimeout(() => bot.chat('/lobby'), 2000);
-        setTimeout(() => bot.chat('/rejoin'), 3000);
+        setTimeout(() => bot.chat('/lobby'), 4000);
+        setTimeout(() => bot.chat('/rejoin'), 5000);
         setTimeout(() => {
             Object.values(bot.players).forEach(player => {
                 console.log(player.displayName.toString());
