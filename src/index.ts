@@ -74,6 +74,18 @@ bot.on("message", message => {
     const line0 = message.toString().split('\n')[0];
     const line0_arr = line0.split(' ');
 
+    if(message.toString().split('\n').length > 1) {
+        const line1 = message.toString().split('\n')[1];
+        const line1_arr = line1.split(' ');
+
+        if(ranks.includes(line1_arr[0]) && line1_arr[3] === 'invited' && line1_arr[4] === 'you' && botInviteList.includes(line1_arr[1])) {
+            bot.chat(`/p accept ${line1_arr[1]}`);
+        }
+        else if(line1_arr[2] === 'invited' && line1_arr[3] === 'you' && botInviteList.includes(line1_arr[0])) {
+            bot.chat(`/p accept ${line1_arr[0]}`);
+        }
+    }
+
     if(line0.includes(':')) {
         return;
     }
@@ -422,7 +434,7 @@ function gameReset() {
     greenTeam = [];
     set = false;
     mapChecked = false;
-    botAssigned = false;``
+    botAssigned = false;
     return players = pTemp;
 }
 
