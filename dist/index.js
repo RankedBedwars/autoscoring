@@ -67,16 +67,18 @@ bot.on("message", message => {
         gameStarted = true;
         setTimeout(() => bot.chat('/lobby'), 2000);
         setTimeout(() => bot.chat('/rejoin'), 3000);
-        setTimeout(() => Object.values(bot.players).forEach(player => {
-            console.log(player.displayName.toString());
-            if (![...botInviteList, bot.username].includes(player.displayName.toString())) {
-                errorMsg(player.username);
-                return gameReset();
-            }
-        }), 5500);
-        Object.values(bot.players).forEach(player => {
-            console.log(player);
-        });
+        setTimeout(() => {
+            Object.values(bot.players).forEach(player => {
+                console.log(player.displayName.toString());
+                if (![...botInviteList, bot.username].includes(player.displayName.toString()) && player.ping === 1) {
+                    errorMsg(player.username);
+                    return gameReset();
+                }
+            });
+            Object.values(bot.players).forEach(player => {
+                console.log(player);
+            });
+        }, 5500);
     }
     if (!gameStarted) {
         return;
