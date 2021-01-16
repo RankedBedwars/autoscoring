@@ -25,6 +25,9 @@ let redTeam = [];
 let peopleWhoBrokeBeds = [];
 let map;
 let mapChecked;
+let players2 = {};
+let in_party = [];
+let chat = [];
 let socket;
 let gameStarted = false;
 let gameEnded = false;
@@ -42,6 +45,11 @@ bot.on("login", () => {
         team2 = botInviteList.slice(players.length / 2);
         map = _map;
         mapChecked = false;
+        chat = [];
+        in_party = [];
+        players.forEach(player => {
+            players2[player.minecraft.name] = { status: null, tries: 0 };
+        });
     });
     setTimeout(() => bot.chat("/p leave"), 1000);
 });
@@ -56,6 +64,68 @@ bot.on("message", message => {
         }
         else if (line1_arr[2] === 'invited' && line1_arr[3] === 'you' && botInviteList.includes(line1_arr[0])) {
             bot.chat(`/party accept ${line1_arr[0]}`);
+        }
+        else if (line1.includes("invited") && line1.includes("to the party! They have 60 seconds to accept.")) {
+            let invited = "", inviter = "";
+            if (line1.split(" ")[2].includes("["))
+                invited = line1.split(" ")[3];
+            else
+                invited = line1.split(" ")[2];
+            if (line1.split(" ")[0].includes("["))
+                inviter = line1.split(" ")[1];
+            else
+                inviter = line1.split(" ")[0];
+            players2[invited].status = "invited";
+            players2[invited].inviter = inviter;
+        }
+        if (line1.includes("The party invite to") && line1.includes("has expired")) {
+            let expired = "";
+            if (line1.split(" ")[4].includes("["))
+                expired = line1.split(" ")[5];
+            else
+                expired = line1.split(" ")[4];
+            if (Object.keys(players).includes(expired)) {
+                if (players2[expired].tries < 3) {
+                    chat.push(`/pc [RBW] ${expired} hasn't joined the party yet. ${3 - players2[expired].tries} tries remaining!`);
+                    players2[expired].tries++;
+                    chat.push("/p " + expired);
+                }
+                else {
+                    bot.chat('/pc 3 invites expired. Please manually invite the remaining players.');
+                }
+            }
+        }
+        if (line1.includes("joined the party.")) {
+            let joined = "", rank = null;
+            if (line1.split(" ")[0].includes("[")) {
+                rank = line1.split(" ")[0];
+                joined = line1.split(" ")[1];
+            }
+            else
+                joined = line1.split(" ")[0];
+            if (Object.keys(players2).includes(joined)) {
+                players2[joined].status = "joined";
+                players2[joined].rank = !rank ? "NON" : rank;
+                in_party.push(joined);
+            }
+            if (in_party.length === players.length) {
+                const mvp_pp = Object.keys(players2).find(key => players2[key].rank === "[MVP++]");
+                if (mvp_pp)
+                    chat.push(`/p transfer ${mvp_pp}`);
+                else
+                    chat.push("/p transfer " + in_party[Math.floor(Math.random() * players.length)]);
+            }
+        }
+        if (line1.includes("has left the party.") && !line1.includes(":")) {
+            let left = "";
+            if (line1.split(" ")[0].includes("["))
+                left = line1.split(" ")[1];
+            else
+                left = line1.split(" ")[0];
+            if (Object.keys(players2).includes(left)) {
+                players2[left].status = "left";
+                in_party.filter(name => name !== left);
+            }
         }
         return;
     }
@@ -307,3 +377,7 @@ function errorMsg(ign) {
     }
     setTimeout(() => bot.chat(`/pc Bot detected that ${ign} is nicked or is an alt. Please requeue or game will be voided.`), 1000);
 }
+setInterval(() => {
+    if (chat.length)
+        bot.chat(chat.shift());
+}, 600);
