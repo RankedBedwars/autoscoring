@@ -57,6 +57,12 @@ bot.on("login", () => {
             if (gameStarted || gameEnded)
                 return;
             bot.chat("/pc This game took too long to start, and has been canceled.");
+            botInviteList = [];
+            players = [];
+            players2 = {};
+            chat = [];
+            in_party = [];
+            gameReset();
             setTimeout(() => bot.chat("/p leave"), 1000);
             socket.emit("gameCancel");
         }, 5 * 60000);
