@@ -61,7 +61,7 @@ bot.on("login", () => {
         console.log('Game Started');
 
         timeout = setTimeout(() => {
-            if(gameStarted) return;
+            if(gameStarted || gameEnded) return;
             bot.chat("/pc This game took too long to start, and has been canceled.");
             setTimeout(() => bot.chat("/p leave"), 1000);
             socket.emit("gameCancel");
@@ -141,19 +141,6 @@ bot.on("message", message => {
             players2[left].status = "left";
             in_party.filter(name => name !== left);
         }
-    }
-
-    // party system
-    if(message.toString().split('\n').length > 1) {
-        
-        console.log(message.toString());
-
-        const line0 = message.toString().split('\n')[1];
-        const line0_arr = line0.split(' ');
-
-                
-
-        return;
     }
 
     if(line0.includes(':')) {
