@@ -65,74 +65,74 @@ bot.on("login", () => {
     setTimeout(() => bot.chat("/p leave"), 1000);
 });
 bot.on("message", message => {
-    console.log(message.toString().split(' '));
     const line0 = message.toString().split('\n')[0];
     const line0_arr = line0.split(' ');
+    if (line0.includes("invited") && line0.includes("to the party! They have 60 seconds to accept.")) {
+        let invited = "", inviter = "";
+        if (line0_arr[2].includes("["))
+            invited = line0_arr[3];
+        else
+            invited = line0_arr[2];
+        if (line0_arr[0].includes("["))
+            inviter = line0_arr[1];
+        else
+            inviter = line0_arr[0];
+        players2[invited].status = "invited";
+        players2[invited].inviter = inviter;
+    }
+    else if (line0.includes("The party invite to") && line0.includes("has expired")) {
+        let expired = "";
+        if (line0_arr[4].includes("["))
+            expired = line0_arr[5];
+        else
+            expired = line0_arr[4];
+        if (Object.keys(players).includes(expired)) {
+            if (players2[expired].tries < 3) {
+                chat.push(`/pc [RBW] ${expired} hasn't joined the party yet. ${3 - players2[expired].tries} tries remaining!`);
+                players2[expired].tries++;
+                chat.push("/p " + expired);
+            }
+            else {
+                bot.chat('/pc 3 invites expired. Please manually invite the remaining players.');
+            }
+        }
+    }
+    else if (line0.includes("joined the party.")) {
+        let joined = "", rank = null;
+        if (line0_arr[0].includes("[")) {
+            rank = line0_arr[0];
+            joined = line0_arr[1];
+        }
+        else
+            joined = line0_arr[0];
+        if (Object.keys(players2).includes(joined)) {
+            players2[joined].status = "joined";
+            players2[joined].rank = !rank ? "NON" : rank;
+            in_party.push(joined);
+        }
+        if (in_party.length === players.length) {
+            const mvp_pp = Object.keys(players2).find(key => players2[key].rank === "[MVP++]");
+            if (mvp_pp)
+                chat.push(`/p transfer ${mvp_pp}`);
+            else
+                chat.push("/p transfer " + in_party[Math.floor(Math.random() * players.length)]);
+        }
+    }
+    else if (line0.includes("has left the party.") && !line0.includes(":")) {
+        let left = "";
+        if (line0_arr[0].includes("["))
+            left = line0_arr[1];
+        else
+            left = line0_arr[0];
+        if (Object.keys(players2).includes(left)) {
+            players2[left].status = "left";
+            in_party.filter(name => name !== left);
+        }
+    }
     if (message.toString().split('\n').length > 1) {
-        const line1 = message.toString().split('\n')[1];
-        const line1_arr = line1.split(' ');
-        if (line1.includes("invited") && line1.includes("to the party! They have 60 seconds to accept.")) {
-            let invited = "", inviter = "";
-            if (line1_arr[2].includes("["))
-                invited = line1_arr[3];
-            else
-                invited = line1_arr[2];
-            if (line1_arr[0].includes("["))
-                inviter = line1_arr[1];
-            else
-                inviter = line1_arr[0];
-            players2[invited].status = "invited";
-            players2[invited].inviter = inviter;
-        }
-        else if (line1.includes("The party invite to") && line1.includes("has expired")) {
-            let expired = "";
-            if (line1_arr[4].includes("["))
-                expired = line1_arr[5];
-            else
-                expired = line1_arr[4];
-            if (Object.keys(players).includes(expired)) {
-                if (players2[expired].tries < 3) {
-                    chat.push(`/pc [RBW] ${expired} hasn't joined the party yet. ${3 - players2[expired].tries} tries remaining!`);
-                    players2[expired].tries++;
-                    chat.push("/p " + expired);
-                }
-                else {
-                    bot.chat('/pc 3 invites expired. Please manually invite the remaining players.');
-                }
-            }
-        }
-        else if (line1.includes("joined the party.")) {
-            let joined = "", rank = null;
-            if (line1_arr[0].includes("[")) {
-                rank = line1_arr[0];
-                joined = line1_arr[1];
-            }
-            else
-                joined = line1_arr[0];
-            if (Object.keys(players2).includes(joined)) {
-                players2[joined].status = "joined";
-                players2[joined].rank = !rank ? "NON" : rank;
-                in_party.push(joined);
-            }
-            if (in_party.length === players.length) {
-                const mvp_pp = Object.keys(players2).find(key => players2[key].rank === "[MVP++]");
-                if (mvp_pp)
-                    chat.push(`/p transfer ${mvp_pp}`);
-                else
-                    chat.push("/p transfer " + in_party[Math.floor(Math.random() * players.length)]);
-            }
-        }
-        else if (line1.includes("has left the party.") && !line1.includes(":")) {
-            let left = "";
-            if (line1_arr[0].includes("["))
-                left = line1_arr[1];
-            else
-                left = line1_arr[0];
-            if (Object.keys(players2).includes(left)) {
-                players2[left].status = "left";
-                in_party.filter(name => name !== left);
-            }
-        }
+        console.log(message.toString());
+        const line0 = message.toString().split('\n')[1];
+        const line0_arr = line0.split(' ');
         return;
     }
     if (line0.includes(':')) {
