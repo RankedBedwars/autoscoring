@@ -454,8 +454,8 @@ function errorMsg(ign: string) {
 
 setInterval(() => {
     if (chat.length) {
-        bot.chat(chat.shift()!);
         console.log(chat[0]);
+        bot.chat(chat.shift()!);
     }
 }, 1250);
 
