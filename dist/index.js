@@ -14,6 +14,7 @@ let bot = mineflayer_1.default.createBot({
     username: process.env.USERNAME,
     password: process.env.PASSWORD,
 });
+let players2temp = {};
 let set = false;
 let players = [];
 let pTemp = [];
@@ -53,6 +54,7 @@ bot.on("login", () => {
         players.forEach(player => {
             players2[player.minecraft.name] = { status: null, tries: 0 };
         });
+        players2temp = { ...players2 };
         botAssigned = true;
         console.log('Game Started');
         timeout = setTimeout(() => {
@@ -394,7 +396,8 @@ function gameReset() {
     set = false;
     mapChecked = false;
     botAssigned = false;
-    return players = pTemp;
+    players2 = { ...players2temp };
+    return players = [...pTemp];
 }
 function errorMsg(ign) {
     if (ign === '') {
