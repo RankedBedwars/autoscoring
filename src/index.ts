@@ -68,6 +68,7 @@ bot.on("login", () => {
             players2 = {};
             chat = [];
             in_party = [];
+            botPartied = false;
             gameReset();
             chat.push("/p leave");
             socket.emit("gameCancel");
