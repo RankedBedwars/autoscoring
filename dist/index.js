@@ -92,7 +92,7 @@ bot.on("message", message => {
     if (line0.includes(':')) {
         return;
     }
-    if (line0.includes("invited") && line0.includes("to the party! They have 60 seconds to accept.")) {
+    if (line0.includes("invited") && line0.includes("to the party! They have 60 seconds to accept.") && !(gameStarted || gameEnded)) {
         let invited = "", inviter = "";
         if (line0_arr[3].includes("["))
             invited = line0_arr[4];
@@ -108,7 +108,7 @@ bot.on("message", message => {
         players2[invited].status = "invited";
         players2[invited].inviter = inviter;
     }
-    else if (line0.includes("The party invite to") && line0.includes("has expired")) {
+    else if (line0.includes("The party invite to") && line0.includes("has expired") && !(gameStarted || gameEnded)) {
         let expired = "";
         if (line0_arr[4].includes("["))
             expired = line0_arr[5];
@@ -125,7 +125,7 @@ bot.on("message", message => {
             }
         }
     }
-    else if (line0.includes("joined the party.")) {
+    else if (line0.includes("joined the party.") && !(gameStarted || gameEnded)) {
         let joined = "", rank = null;
         if (line0_arr[0].includes("[")) {
             rank = line0_arr[0];
@@ -146,7 +146,7 @@ bot.on("message", message => {
                 chat.push("/p transfer " + in_party[Math.floor(Math.random() * players.length)]);
         }
     }
-    else if (line0.includes("has left the party.")) {
+    else if (line0.includes("has left the party.") && !(gameStarted || gameEnded)) {
         let left = "";
         if (line0_arr[0].includes("["))
             left = line0_arr[1];
@@ -157,7 +157,7 @@ bot.on("message", message => {
             in_party.filter(name => name !== left);
         }
     }
-    if (line0_arr[1] === 'has' && line0_arr[2] === 'joined') {
+    if (line0_arr[1] === 'has' && line0_arr[2] === 'joined' && !(gameStarted || gameEnded)) {
         if (!mapChecked) {
             chat.push('/map');
             mapChecked = true;

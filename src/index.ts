@@ -103,7 +103,7 @@ bot.on("message", message => {
         return;
     }
 
-    if (line0.includes("invited") && line0.includes("to the party! They have 60 seconds to accept.")) {
+    if (line0.includes("invited") && line0.includes("to the party! They have 60 seconds to accept.") && !(gameStarted || gameEnded)) {
         let invited: string = "", inviter: string = "";
 
         // Store the invited player in a variable
@@ -123,7 +123,7 @@ bot.on("message", message => {
     }
 
     // When a player's invite expires
-    else if (line0.includes("The party invite to") && line0.includes("has expired")) {
+    else if (line0.includes("The party invite to") && line0.includes("has expired") && !(gameStarted || gameEnded)) {
         let expired = "";
         if (line0_arr[4].includes("[")) expired = line0_arr[5];
         else expired = line0_arr[4];
@@ -141,7 +141,7 @@ bot.on("message", message => {
         }
     }
 
-    else if (line0.includes("joined the party.")) {
+    else if (line0.includes("joined the party.") && !(gameStarted || gameEnded)) {
         let joined = "", rank = null;
         if (line0_arr[0].includes("[")) {
             rank = line0_arr[0];
@@ -163,7 +163,7 @@ bot.on("message", message => {
     }
 
     // When a player leaves the party
-    else if (line0.includes("has left the party.")) {
+    else if (line0.includes("has left the party.") && !(gameStarted || gameEnded)) {
         let left = "";
         if (line0_arr[0].includes("[")) left = line0_arr[1];
         else left = line0_arr[0];
@@ -174,7 +174,7 @@ bot.on("message", message => {
         }
     }
     
-    if(line0_arr[1] === 'has' && line0_arr[2] === 'joined') {
+    if(line0_arr[1] === 'has' && line0_arr[2] === 'joined' && !(gameStarted || gameEnded)) {
         if(!mapChecked) {
             chat.push('/map');
             mapChecked = true;
