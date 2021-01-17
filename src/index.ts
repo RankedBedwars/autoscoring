@@ -62,7 +62,7 @@ bot.on("login", () => {
 
         timeout = setTimeout(() => {
             if(gameStarted || gameEnded) return;
-            chat.push("/pc This game took too long to start, and has been canceled.");
+            bot.chat("/pc This game took too long to start, and has been canceled.");
             botInviteList = [];
             players = [];
             players2 = {};
@@ -396,7 +396,7 @@ function endGame(team: string[]) {
     if(gameEnded) return;
     gameEnded = true;
 
-    chat.push('/pc Great game guys! Svee says have a good day <3');
+    bot.chat('/pc Great game guys! Svee says have a good day <3');
     chat.push('/p leave');
 
     players.forEach(player => {
