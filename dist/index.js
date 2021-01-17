@@ -396,9 +396,10 @@ function errorMsg(ign) {
     chat.push(`/pc Bot detected that ${ign} is nicked or is an alt. Please requeue or game will be voided.`);
 }
 setInterval(() => {
-    console.log(chat[0]);
-    if (chat.length)
+    if (chat.length) {
         bot.chat(chat.shift());
+        console.log(chat[0]);
+    }
 }, 1250);
 setInterval(() => {
     if (botAssigned) {

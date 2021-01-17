@@ -453,8 +453,10 @@ function errorMsg(ign: string) {
 }
 
 setInterval(() => {
-    console.log(chat[0]);
-    if (chat.length) bot.chat(chat.shift()!);
+    if (chat.length) {
+        bot.chat(chat.shift()!);
+        console.log(chat[0]);
+    }
 }, 1250);
 
 setInterval(() => {
