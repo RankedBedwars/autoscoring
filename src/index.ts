@@ -29,7 +29,7 @@ let players2: { [key: string]: any } = {};
 let in_party: any[] = [];
 let chat: string[] = [];
 let botAssigned = false;
-
+let botPartied = false;
 let socket: Socket;
 let gameStarted = false;
 let gameEnded = false;
@@ -85,9 +85,11 @@ bot.on("message", message => {
         const line1_arr = line1.split(' ');
 
         if(ranks.includes(line1_arr[0]) && line1_arr[3] === 'invited' && line1_arr[4] === 'you' && botInviteList.includes(line1_arr[1])) {
+            chat.push('/p leave');
             chat.push(`/p accept ${line1_arr[1]}`);
         }
         else if(line1_arr[2] === 'invited' && line1_arr[3] === 'you' && botInviteList.includes(line1_arr[0])) {
+            chat.push('/p leave');
             chat.push(`/p accept ${line1_arr[0]}`);
         }
         return;
@@ -171,12 +173,13 @@ bot.on("message", message => {
     if(line0_arr[1] === 'has' && line0_arr[2] === 'joined') {
         if(!mapChecked) {
             chat.push('/map');
+            mapChecked = true;
         }
         return;
     }   
 
     if(line0.startsWith('You are currently playing on ')) {
-        if(map !== line0_arr.slice(-1).join("") && !mapChecked) {
+        if(map !== line0_arr.slice(-1).join("")) {
             chat.push(`/pc Please choose the map ${map} when you join the game instead of ${line0_arr.slice(-1).join("")}.`);
             return gameReset();
         }
@@ -429,6 +432,8 @@ function endGame(team: string[]) {
     players2 = {};
     chat = [];
     in_party = [];
+    botPartied = false;
+    botAssigned = false;
     gameReset();
 }
 
@@ -460,10 +465,11 @@ setInterval(() => {
 }, 1250);
 
 setInterval(() => {
-    if(botAssigned) {
-        chat.push("/p "+ botInviteList.slice(0, players.length/2).join(" "));
-        chat.push("/p "+ botInviteList.slice(players.length/2).join(" "));
-        chat.push("/p settings allinvite");
-        botAssigned = false;
+    if (botAssigned && !botPartied) {
+        botInviteList.forEach(player => {
+            chat.push(`/p ${player}`);
+        })
+        chat.push('/p settings allinvite');
+        botPartied = true;
     }
 }, 5000)
