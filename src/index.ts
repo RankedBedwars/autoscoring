@@ -61,18 +61,18 @@ bot.on("login", () => {
 
         timeout = setTimeout(() => {
             if(gameStarted || gameEnded) return;
-            bot.chat("/pc This game took too long to start, and has been canceled.");
+            chat.push("/pc This game took too long to start, and has been canceled.");
             botInviteList = [];
             players = [];
             players2 = {};
             chat = [];
             in_party = [];
             gameReset();
-            setTimeout(() => bot.chat("/p leave"), 1000);
+            chat.push("/p leave");
             socket.emit("gameCancel");
         }, 5 * 60000);
     });
-    setTimeout(() => bot.chat("/p leave"), 1000);
+    chat.push("/p leave"), 1000;
 });
 
 bot.on("message", message => {
@@ -85,10 +85,10 @@ bot.on("message", message => {
         const line1_arr = line1.split(' ');
 
         if(ranks.includes(line1_arr[0]) && line1_arr[3] === 'invited' && line1_arr[4] === 'you' && botInviteList.includes(line1_arr[1])) {
-            bot.chat(`/p accept ${line1_arr[1]}`);
+            chat.push(`/p accept ${line1_arr[1]}`);
         }
         else if(line1_arr[2] === 'invited' && line1_arr[3] === 'you' && botInviteList.includes(line1_arr[0])) {
-            bot.chat(`/p accept ${line1_arr[0]}`);
+            chat.push(`/p accept ${line1_arr[0]}`);
         }
         return;
     }
@@ -130,7 +130,7 @@ bot.on("message", message => {
                 chat.push("/p "+expired);
             } 
             else {
-                bot.chat('/pc 3 invites expired. Please manually invite the remaining players.');
+                chat.push('/pc 3 invites expired. Please manually invite the remaining players.');
             }
         }
     }
@@ -170,21 +170,21 @@ bot.on("message", message => {
     
     if(line0_arr[1] === 'has' && line0_arr[2] === 'joined') {
         if(!mapChecked) {
-            bot.chat('/map');
+            chat.push('/map');
         }
         return;
     }   
 
     if(line0.startsWith('You are currently playing on ')) {
         if(map !== line0_arr.slice(-1).join("") && !mapChecked) {
-            bot.chat(`/pc Please choose the map ${map} when you join the game instead of ${line0_arr.slice(-1).join("")}.`);
+            chat.push(`/pc Please choose the map ${map} when you join the game instead of ${line0_arr.slice(-1).join("")}.`);
             return gameReset();
         }
         return;
     }
 
     if(message.toString() === 'You are AFK. Move around to return from AFK.') {
-        return bot.chat('/lobby');
+        return chat.push('/lobby');
     }
 
     const motD = message.toMotd();
@@ -195,8 +195,8 @@ bot.on("message", message => {
 
     if(line0.trim() === 'Protect your bed and destroy the enemy beds.') {
         gameStarted = true;
-        setTimeout(() => bot.chat('/lobby'), 4000);
-        setTimeout(() => bot.chat('/rejoin'), 5000);
+        chat.push('/lobby');
+        chat.push('/rejoin');
 
         setTimeout(() => {
             Object.values(bot.players).forEach(player => {
@@ -386,14 +386,14 @@ function findPlayer(ign: string) {
 function endGame(team: string[]) {
     if(peopleWhoBrokeBeds.length === 0) {
         gameStarted = false;
-        bot.chat('/pc Game has to be re-queued.');
+        chat.push('/pc Game has to be re-queued.');
         return gameReset();
     }
     if(gameEnded) return;
     gameEnded = true;
 
-    bot.chat('/pc Great game guys! Svee says have a good day <3');
-    setTimeout(() => bot.chat('/p leave'), 1000);
+    chat.push('/pc Great game guys! Svee says have a good day <3');
+    chat.push('/p leave');
 
     players.forEach(player => {
 
@@ -433,7 +433,7 @@ function endGame(team: string[]) {
 }
 
 function gameReset() {
-    setTimeout(() => bot.chat('/lobby'), 3000);
+    chat.push('/lobby');
     gameStarted = false;
     gameEnded = false;
     peopleWhoBrokeBeds = [];
@@ -447,13 +447,13 @@ function gameReset() {
 
 function errorMsg(ign: string) {
     if(ign === '') {
-        return setTimeout(() => bot.chat(`/pc Bot detected that there is a nick or an alt in the game. Please requeue or game will be voided.`), 1000);    
+        chat.push(`/pc Bot detected that there is a nick or an alt in the game. Please requeue or game will be voided.`);    
     }
-    setTimeout(() => bot.chat(`/pc Bot detected that ${ign} is nicked or is an alt. Please requeue or game will be voided.`), 1000);
+    chat.push(`/pc Bot detected that ${ign} is nicked or is an alt. Please requeue or game will be voided.`);
 }
 
 setInterval(() => {
-    if (chat.length) bot.chat(chat.shift()!);
+    if (chat.length) chat.push(chat.shift()!);
 }, 800);
 
 setInterval(() => {
