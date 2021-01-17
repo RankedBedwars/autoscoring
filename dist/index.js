@@ -89,6 +89,13 @@ bot.on("message", message => {
         }
         return;
     }
+    if (line0.includes(`${bot.username} forcetransfer`)) {
+        const mvp_pp = Object.keys(players2).find(key => players2[key].rank === "[MVP++]");
+        if (mvp_pp)
+            chat.push(`/p transfer ${mvp_pp}`);
+        else
+            chat.push("/p transfer " + botInviteList[Math.floor(Math.random() * players.length)]);
+    }
     if (line0.includes(':')) {
         return;
     }
@@ -351,7 +358,7 @@ function endGame(team) {
         return;
     gameEnded = true;
     bot.chat('/pc Great game guys! Svee says have a good day <3');
-    chat.push('/p leave');
+    bot.chat('/p leave');
     players.forEach(player => {
         if (team.includes(player.minecraft.name)) {
             player.winstreak++;
@@ -377,14 +384,16 @@ function endGame(team) {
     });
     console.log(`Game finished, sending back: ${JSON.stringify(players)}`);
     socket.emit("gameFinish", players);
+    gameReset();
     botInviteList = [];
     players = [];
     players2 = {};
+    pTemp = [];
+    players2temp = {};
     chat = [];
     in_party = [];
     botPartied = false;
     botAssigned = false;
-    gameReset();
 }
 function gameReset() {
     chat.push('/lobby');
