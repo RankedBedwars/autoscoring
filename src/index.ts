@@ -38,6 +38,7 @@ let timeout: NodeJS.Timeout | undefined;
 
 bot.on("login", () => {
     console.log(`${bot.username} --> Online!`);
+    bot.chat('/p leave');
     socket = io(`http://${process.env.LOCAL_SOCKET ? "localhost" : "rbw-s1.slicknicky10.me"}:${process.env.SOCKET_PORT!}/?key=${process.env.SOCKET_KEY!}&bot=${bot.username}`);
     socket.on("gameStart", (data: GameStart) => {
         const _players = data.players;
@@ -72,7 +73,6 @@ bot.on("login", () => {
             socket.emit("gameCancel");
         }, 5 * 60000);
     });
-    chat.push("/p leave"), 1000;
 });
 
 bot.on("message", message => {
@@ -453,7 +453,8 @@ function errorMsg(ign: string) {
 }
 
 setInterval(() => {
-    if (chat.length) chat.push(chat.shift()!);
+    console.log(chat[0]);
+    if (chat.length) bot.chat(chat.shift()!);
 }, 1250);
 
 setInterval(() => {

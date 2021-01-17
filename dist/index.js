@@ -35,6 +35,7 @@ let gameEnded = false;
 let timeout;
 bot.on("login", () => {
     console.log(`${bot.username} --> Online!`);
+    bot.chat('/p leave');
     socket = socket_io_client_1.io(`http://${process.env.LOCAL_SOCKET ? "localhost" : "rbw-s1.slicknicky10.me"}:${process.env.SOCKET_PORT}/?key=${process.env.SOCKET_KEY}&bot=${bot.username}`);
     socket.on("gameStart", (data) => {
         const _players = data.players;
@@ -67,7 +68,6 @@ bot.on("login", () => {
             socket.emit("gameCancel");
         }, 5 * 60000);
     });
-    chat.push("/p leave"), 1000;
 });
 bot.on("message", message => {
     const line0 = message.toString().split('\n')[0];
@@ -396,8 +396,9 @@ function errorMsg(ign) {
     chat.push(`/pc Bot detected that ${ign} is nicked or is an alt. Please requeue or game will be voided.`);
 }
 setInterval(() => {
+    console.log(chat[0]);
     if (chat.length)
-        chat.push(chat.shift());
+        bot.chat(chat.shift());
 }, 1250);
 setInterval(() => {
     if (botAssigned) {
