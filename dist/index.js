@@ -398,11 +398,11 @@ function errorMsg(ign) {
 setInterval(() => {
     if (chat.length)
         chat.push(chat.shift());
-}, 800);
+}, 1250);
 setInterval(() => {
     if (botAssigned) {
-        chat.push("/p " + Object.keys(players2).slice(0, players.length / 2).join(" "));
-        chat.push("/p " + Object.keys(players2).slice(players.length / 2).join(" "));
+        chat.push("/p " + botInviteList.slice(0, players.length / 2).join(" "));
+        chat.push("/p " + botInviteList.slice(players.length / 2).join(" "));
         chat.push("/p settings allinvite");
         botAssigned = false;
     }
