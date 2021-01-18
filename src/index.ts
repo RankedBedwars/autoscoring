@@ -34,6 +34,7 @@ let botPartied = false;
 let socket: Socket;
 let gameStarted = false;
 let gameEnded = false;
+let nickChecked = false;
 
 let timeout: NodeJS.Timeout | undefined;
 
@@ -53,6 +54,7 @@ bot.on("login", () => {
         mapChecked = false;
         chat = [];
         in_party = [];
+        nickChecked = false;
 
         players.forEach(player => {
             players2[player.minecraft.name] = {status: null, tries: 0};
@@ -61,6 +63,8 @@ bot.on("login", () => {
         players2temp = { ...players2 };
 
         botAssigned = true;
+
+        chat = ['/p leave', ...chat];
         console.log('Game Started');
 
         timeout = setTimeout(() => {
@@ -88,11 +92,11 @@ bot.on("message", message => {
         const line1 = message.toString().split('\n')[1];
         const line1_arr = line1.split(' ');
 
-        if(ranks.includes(line1_arr[0]) && line1_arr[3] === 'invited' && line1_arr[4] === 'you' && botInviteList.includes(line1_arr[1])) {
+        if(ranks.includes(line1_arr[0]) && line1_arr[3] === 'invited' && line1_arr[4] === 'you' && botInviteList.includes(line1_arr[1]) && !(gameStarted || gameEnded)) {
             chat.push('/p leave');
             chat.push(`/p accept ${line1_arr[1]}`);
         }
-        else if(line1_arr[2] === 'invited' && line1_arr[3] === 'you' && botInviteList.includes(line1_arr[0])) {
+        else if(line1_arr[2] === 'invited' && line1_arr[3] === 'you' && botInviteList.includes(line1_arr[0]) && !(gameStarted || gameEnded)) {
             chat.push('/p leave');
             chat.push(`/p accept ${line1_arr[0]}`);
         }
@@ -214,10 +218,15 @@ bot.on("message", message => {
         setTimeout(() => {
             Object.values(bot.players).forEach(player => {
                 if(![...botInviteList, bot.username].includes(player.displayName.toString()) && player.ping === 1) {
+                    if(bot.username === player.displayName.toString()) {
+                        gameReset();
+                        return chat.push('Wrong teams joined. Please re-queue or game will be voided.');
+                    }
                     errorMsg(player.username);
                     return gameReset();
                 }
             });
+            nickChecked = true;
             if(timeout) clearTimeout(timeout);
         }, 5500);
 
@@ -231,9 +240,12 @@ bot.on("message", message => {
         return peopleWhoBrokeBeds.push('null');
     }
 
-    if(line0.endsWith("died.")){
+    if(line0.endsWith("died.") || line0.endsWith("disconnected")){
         const p = findPlayer(line0_arr[0]);
         if(p) return p.deaths!++;
+        if(nickChecked) {
+            return chat.push(`Bot detected that ${line0_arr[0]} nicked midgame. Staff members have been alerted.`);
+        }
         errorMsg(line0_arr[0]);
         return gameReset();
     }
@@ -269,6 +281,9 @@ bot.on("message", message => {
                 return findPlayer(line0_arr[0])!.deaths!++;
             }
             catch {
+                if(nickChecked) {
+                    return chat.push(`Bot detected that ${line0_arr[0]} nicked midgame. Staff members have been alerted.`);
+                }
                 errorMsg(line0_arr[0]);
                 return gameReset();
             }
@@ -279,8 +294,11 @@ bot.on("message", message => {
         if(!p) {
             p = findPlayer(line0_arr.slice(-5, -4)[0].slice(0, -2));
             if(!p) {
-               errorMsg('');
-               return gameReset();
+                if(nickChecked) {
+                   return chat.push(`Bot detected that a nicked midgame. Staff members have been alerted.`);
+                }
+                errorMsg('');
+                return gameReset();
             }
         }
 
@@ -312,6 +330,9 @@ bot.on("message", message => {
             return findPlayer(line0_arr[0])!.deaths!++;
         }
         catch {
+            if(nickChecked) {
+                return chat.push(`Bot detected that ${line0_arr[0]} nicked midgame. Staff members have been alerted.`);
+            }
             errorMsg(line0_arr[0]);
             return gameReset();
         }
@@ -328,6 +349,9 @@ bot.on("message", message => {
             return findPlayer(line0_arr[0])!.deaths!++;
         }
         catch {
+            if(nickChecked) {
+                return chat.push(`Bot detected that ${line0_arr[0]} nicked midgame. Staff members have been alerted.`);
+            }
             errorMsg(line0_arr[0]);
             return gameReset();
         }
@@ -379,6 +403,9 @@ bot.on("message", message => {
         findPlayer(kill[0])!.kills!++;
     }
     catch {
+        if(nickChecked) {
+            return chat.push(`Bot detected that ${kill[0]} nicked midgame. Staff members have been alerted.`);
+        }
         errorMsg(kill[0]);
         return gameReset();
     }
@@ -386,6 +413,9 @@ bot.on("message", message => {
         return findPlayer(kill[1])!.deaths!++;
     }
     catch {
+        if(nickChecked) {
+            return chat.push(`Bot detected that ${kill[1]} nicked midgame. Staff members have been alerted.`);
+        }
         errorMsg(kill[1]);
         return gameReset();
     }
@@ -406,7 +436,6 @@ function endGame(team: string[]) {
     gameEnded = true;
 
     setTimeout(() => bot.chat('/pc Great game guys! Svee says have a good day <3'), 1000);
-    setTimeout(() => bot.chat('/p leave'), 1000);
 
     players.forEach(player => {
 
@@ -459,6 +488,7 @@ function gameReset() {
     set = false;
     mapChecked = false;
     botAssigned = false;
+    nickChecked = false;
     players2 = { ...players2temp };
     return players = [ ...pTemp ];
 }
