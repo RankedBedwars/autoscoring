@@ -89,7 +89,7 @@ bot.on("message", message => {
         }
         return;
     }
-    if (line0.includes(`${bot.username} forcetransfer`)) {
+    if (line0.includes(`${bot.username}  transfer`)) {
         const mvp_pp = Object.keys(players2).find(key => players2[key].rank === "[MVP++]");
         if (mvp_pp)
             chat.push(`/p transfer ${mvp_pp}`);
@@ -357,8 +357,8 @@ function endGame(team) {
     if (gameEnded)
         return;
     gameEnded = true;
-    bot.chat('/pc Great game guys! Svee says have a good day <3');
-    bot.chat('/p leave');
+    setTimeout(() => bot.chat('/pc Great game guys! Svee says have a good day <3'), 1000);
+    setTimeout(() => bot.chat('/p leave'), 1000);
     players.forEach(player => {
         if (team.includes(player.minecraft.name)) {
             player.winstreak++;
