@@ -218,7 +218,8 @@ bot.on("message", message => {
         if (p)
             return p.deaths++;
         if (nickChecked) {
-            return chat.push(`Bot detected that ${line0_arr[0]} nicked midgame. Staff members have been alerted.`);
+            socket.emit("alertStaff", line0_arr[0], botInviteList.join(' '));
+            return chat.push(`/pc Bot detected that ${line0_arr[0]} nicked midgame. Staff members have been alerted.`);
         }
         errorMsg(line0_arr[0]);
         return gameReset();
@@ -252,9 +253,10 @@ bot.on("message", message => {
             try {
                 return findPlayer(line0_arr[0]).deaths++;
             }
-            catch {
+            catch (e) {
                 if (nickChecked) {
-                    return chat.push(`Bot detected that ${line0_arr[0]} nicked midgame. Staff members have been alerted.`);
+                    socket.emit("alertStaff", line0_arr[0], botInviteList.join(' '));
+                    return chat.push(`Bot detected that ${line0_arr[0]} nicked midgame. Staff members have been alerted. Stack:\n${e}`);
                 }
                 errorMsg(line0_arr[0]);
                 return gameReset();
@@ -265,6 +267,7 @@ bot.on("message", message => {
             p = findPlayer(line0_arr.slice(-5, -4)[0].slice(0, -2));
             if (!p) {
                 if (nickChecked) {
+                    socket.emit("alertStaff", ign, botInviteList.join(' '));
                     return chat.push(`Bot detected that a nicked midgame. Staff members have been alerted.`);
                 }
                 errorMsg('');
@@ -296,9 +299,10 @@ bot.on("message", message => {
             p.kills++;
             return findPlayer(line0_arr[0]).deaths++;
         }
-        catch {
+        catch (e) {
             if (nickChecked) {
-                return chat.push(`Bot detected that ${line0_arr[0]} nicked midgame. Staff members have been alerted.`);
+                socket.emit("alertStaff", line0_arr[0], botInviteList.join(' '));
+                return chat.push(`/pc Bot detected that ${line0_arr[0]} nicked midgame. Staff members have been alerted.`);
             }
             errorMsg(line0_arr[0]);
             return gameReset();
@@ -311,9 +315,10 @@ bot.on("message", message => {
         try {
             return findPlayer(line0_arr[0]).deaths++;
         }
-        catch {
+        catch (e) {
             if (nickChecked) {
-                return chat.push(`Bot detected that ${line0_arr[0]} nicked midgame. Staff members have been alerted.`);
+                socket.emit("alertStaff", line0_arr[0], botInviteList.join(' '));
+                return chat.push(`/pc Bot detected that ${line0_arr[0]} nicked midgame. Staff members have been alerted.`);
             }
             errorMsg(line0_arr[0]);
             return gameReset();
@@ -356,8 +361,9 @@ bot.on("message", message => {
     try {
         findPlayer(kill[0]).kills++;
     }
-    catch {
+    catch (e) {
         if (nickChecked) {
+            socket.emit("alertStaff", line0_arr[0], botInviteList.join(' '));
             return chat.push(`Bot detected that ${kill[0]} nicked midgame. Staff members have been alerted.`);
         }
         errorMsg(kill[0]);
@@ -366,8 +372,9 @@ bot.on("message", message => {
     try {
         return findPlayer(kill[1]).deaths++;
     }
-    catch {
+    catch (e) {
         if (nickChecked) {
+            socket.emit("alertStaff", line0_arr[0], botInviteList.join(' '));
             return chat.push(`Bot detected that ${kill[1]} nicked midgame. Staff members have been alerted.`);
         }
         errorMsg(kill[1]);
