@@ -35,6 +35,7 @@ let socket: Socket;
 let gameStarted = false;
 let gameEnded = false;
 let nickChecked = false;
+let fiveMinutesElapsed = false;
 
 let timeout: NodeJS.Timeout | undefined;
 
@@ -68,6 +69,7 @@ bot.on("login", () => {
         console.log('Game Started');
 
         timeout = setTimeout(() => {
+            fiveMinutesElapsed = true;
             if(gameStarted || gameEnded) return;
             bot.chat("/pc This game took too long to start, and has been canceled.");
             botInviteList = [];
@@ -107,6 +109,21 @@ bot.on("message", message => {
         const mvp_pp = Object.keys(players2).find(key => players2[key].rank === "[MVP++]")
         if (mvp_pp) chat.push(`/p transfer ${mvp_pp}`);
         else chat.push("/p transfer "+botInviteList[Math.floor(Math.random() * players.length)]);
+    }
+
+    if(line0.slice(0, 1) === '{' && line0.includes(`"server"`)) {
+        if(line0.includes('lobby') && !gameEnded && fiveMinutesElapsed) {
+            botInviteList = [];
+            players = [];
+            players2 = {};
+            chat = [];
+            in_party = [];
+            botPartied = false;
+            gameReset();
+            chat.push("Game took too long to start. Please re-queue.");
+            chat.push("/p leave");
+            return socket.emit("gameCancel");
+        }
     }
 
     if(line0.includes(':')) {
@@ -487,6 +504,7 @@ function endGame(team: string[]) {
 
 function gameReset() {
     chat.push('/lobby');
+    fiveMinutesElapsed = false;
     gameStarted = false;
     gameEnded = false;
     peopleWhoBrokeBeds = [];
@@ -515,6 +533,7 @@ setInterval(() => {
 }, 1250);
 
 setInterval(() => {
+    chat.push('/locraw');
     if (botAssigned && !botPartied) {
         botInviteList.forEach(player => {
             chat.push(`/p ${player}`);
