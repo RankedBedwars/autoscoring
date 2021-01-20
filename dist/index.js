@@ -92,7 +92,7 @@ bot.on("message", message => {
         }
         return;
     }
-    if (line0.includes(`${bot.username}  transfer`)) {
+    if (line0.includes(`${bot.username}  forcetransfer`)) {
         const mvp_pp = Object.keys(players2).find(key => players2[key].rank === "[MVP++]");
         if (mvp_pp)
             chat.push(`/p transfer ${mvp_pp}`);
