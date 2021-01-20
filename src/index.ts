@@ -46,6 +46,7 @@ bot.on("login", () => {
     socket.on("gameStart", (data: GameStart) => {
         const _players = data.players;
         const _map = data.map;
+        gameEnded = false;
         players = _players;
         pTemp = [...players];
         botInviteList = players.map(p => p.minecraft.name);
@@ -120,6 +121,7 @@ bot.on("message", message => {
             in_party = [];
             botPartied = false;
             gameReset();
+            gameEnded = true;
             chat.push("Game took too long to start. Please re-queue.");
             chat.push("/p leave");
             return socket.emit("gameCancel");
@@ -533,7 +535,9 @@ setInterval(() => {
 }, 1250);
 
 setInterval(() => {
-    chat.push('/locraw');
+    if(!gameEnded) {
+        chat.push('/locraw');
+    }
     if (botAssigned && !botPartied) {
         botInviteList.forEach(player => {
             chat.push(`/p ${player}`);
