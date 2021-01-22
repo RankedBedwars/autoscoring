@@ -41,6 +41,11 @@ bot.on("login", () => {
     console.log(`${bot.username} --> Online!`);
     bot.chat('/p leave');
     socket = socket_io_client_1.io(`http://${process.env.LOCAL_SOCKET ? "localhost" : "rbw-s1.slicknicky10.me"}:${process.env.SOCKET_PORT}/?key=${process.env.SOCKET_KEY}&bot=${bot.username}`);
+    socket.on("actualgamestart", (p) => {
+        players = p;
+        console.log(`Bot received actual game start: ${JSON.stringify(players)}`);
+        pTemp = [...players];
+    });
     socket.on("gameStart", (data) => {
         const _players = data.players;
         const _map = data.map;
