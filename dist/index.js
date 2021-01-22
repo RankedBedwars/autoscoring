@@ -209,7 +209,8 @@ bot.on("message", message => {
     const greenPos = motD.indexOf('§a');
     const redPos = motD.indexOf('§c');
     if (line0.trim() === 'Protect your bed and destroy the enemy beds.') {
-        socket.emit("ActualGameStart", botInviteList);
+        const uuids = players.map(p => p.minecraft.uuid);
+        socket.emit("ActualGameStart", uuids);
         gameStarted = true;
         chat.push('/lobby');
         chat.push('/rejoin');
