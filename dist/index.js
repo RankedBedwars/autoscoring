@@ -96,6 +96,7 @@ bot.on("message", message => {
         return;
     }
     if (line0.includes(`${bot.username}  forcetransfer`)) {
+        console.log(line0);
         const mvp_pp = Object.keys(players2).find(key => players2[key].rank === "[MVP++]");
         if (mvp_pp)
             chat.push(`/p transfer ${mvp_pp}`);
@@ -103,7 +104,8 @@ bot.on("message", message => {
             chat.push("/p transfer " + botInviteList[Math.floor(Math.random() * players.length)]);
     }
     if (line0.slice(0, 1) === '{' && line0.includes(`"server"`)) {
-        if (line0.includes('lobby') && !gameEnded && fiveMinutesElapsed) {
+        console.log(line0);
+        if (line0.includes('lobby') && !gameEnded) {
             botInviteList = [];
             players = [];
             players2 = {};
@@ -112,14 +114,15 @@ bot.on("message", message => {
             botPartied = false;
             gameReset();
             gameEnded = true;
-            chat.push("Game took too long to start. Please re-queue.");
-            chat.push("/p leave");
+            bot.chat("Game took too long to start. Please re-queue.");
+            bot.chat("/p leave");
             return socket.emit("gameCancel");
         }
     }
     if (line0.includes(':')) {
         return;
     }
+    console.log(line0);
     if (line0.includes("invited") && line0.includes("to the party! They have 60 seconds to accept.") && !(gameStarted || gameEnded)) {
         let invited = "", inviter = "";
         if (line0_arr[3].includes("["))
@@ -476,7 +479,7 @@ setInterval(() => {
     }
 }, 1250);
 setInterval(() => {
-    if (!gameEnded) {
+    if (!gameEnded && fiveMinutesElapsed) {
         chat.push('/locraw');
     }
     if (botAssigned && !botPartied) {
