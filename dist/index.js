@@ -209,6 +209,7 @@ bot.on("message", message => {
     const greenPos = motD.indexOf('§a');
     const redPos = motD.indexOf('§c');
     if (line0.trim() === 'Protect your bed and destroy the enemy beds.') {
+        socket.emit("ActualGameStart", botInviteList);
         gameStarted = true;
         chat.push('/lobby');
         chat.push('/rejoin');
@@ -216,8 +217,8 @@ bot.on("message", message => {
             Object.values(bot.players).forEach(player => {
                 if (![...botInviteList, bot.username].includes(player.displayName.toString()) && player.ping === 1) {
                     if (bot.username === player.displayName.toString()) {
-                        gameReset();
-                        return chat.push('Wrong teams joined. Please re-queue or game will be voided.');
+                        chat.push('Wrong teams joined. Please re-queue or game will be voided.');
+                        return gameReset();
                     }
                     errorMsg(player.username);
                     return gameReset();
