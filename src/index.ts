@@ -329,8 +329,9 @@ bot.on("message", message => {
                     return chat.push(`Bot detected that ${line0_arr[0]} nicked midgame. Staff members have been alerted. Stack:\n${e}`);
                 }
                 errorMsg(line0_arr[0]);
-                return gameReset();
+                gameReset();
             }
+            return;
         }
 
         let index = findPlayer(ign);
