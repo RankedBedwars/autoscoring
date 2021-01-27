@@ -337,6 +337,7 @@ bot.on("message", message => {
             const msg = getMsg(index);
             if (!firstKill) {
                 chat.push(`/pc ${players[index].minecraft.name} drew FIRST BLOOD!`);
+                firstKill = true;
             }
             if (msg !== '') {
                 chat.push(`/pc ${msg}`);
@@ -412,6 +413,7 @@ bot.on("message", message => {
         players[index].kills++;
         if (!firstKill) {
             chat.push(`/pc ${players[index].minecraft.name} drew FIRST BLOOD!`);
+            firstKill = true;
         }
         const msg = getMsg(index);
         if (msg !== '') {
