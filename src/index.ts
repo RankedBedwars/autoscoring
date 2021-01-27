@@ -14,8 +14,8 @@ let bot = mineflayer.createBot({
     password: process.env.PASSWORD!,
 });
 
-let players2temp = {};
-let set = false;
+let players2temp: { [key: string]: any } = {};
+let set: boolean = false;
 let players: Player[] = [];
 let pTemp: Player[] = [];
 let botInviteList: string[] = [];
@@ -29,13 +29,15 @@ let mapChecked: boolean;
 let players2: { [key: string]: any } = {};
 let in_party: any[] = [];
 let chat: string[] = [];
-let botAssigned = false;
-let botPartied = false;
+let botAssigned: boolean = false;
+let botPartied: boolean = false;
 let socket: Socket;
-let gameStarted = false;
-let gameEnded = false;
-let nickChecked = false;
-let fiveMinutesElapsed = false;
+let gameStarted: boolean = false;
+let gameEnded: boolean = false;
+let nickChecked: boolean = false;
+let eightMinutesElapsed: boolean = false;
+let streaks: number[] = [];
+let firstKill: boolean = false;
 
 let timeout: NodeJS.Timeout | undefined;
 
@@ -63,6 +65,8 @@ bot.on("login", () => {
         chat = [];
         in_party = [];
         nickChecked = false;
+        streaks = players.map(p => 0);
+        firstKill = false;
 
         players.forEach(player => {
             players2[player.minecraft.name] = {status: null, tries: 0};
@@ -76,7 +80,7 @@ bot.on("login", () => {
         console.log('Game Started');
 
         timeout = setTimeout(() => {
-            fiveMinutesElapsed = true;
+            eightMinutesElapsed = true;
             if(gameStarted || gameEnded) return;
             bot.chat("/pc This game took too long to start, and has been canceled.");
             botInviteList = [];
@@ -88,7 +92,7 @@ bot.on("login", () => {
             gameReset();
             chat.push("/p leave");
             socket.emit("gameCancel");
-        }, 5 * 60000);
+        }, 8 * 60000);
     });
 });
 
@@ -153,7 +157,7 @@ bot.on("message", message => {
         if (line0_arr[0].includes("[")) inviter = line0_arr[1];
         else inviter = line0_arr[0];
 
-        if(!findPlayer(invited) || !findPlayer(inviter)) {
+        if(findPlayer(invited) === -1 || findPlayer(inviter) === -1) {
             return;
         }
 
@@ -168,7 +172,7 @@ bot.on("message", message => {
         else expired = line0_arr[4];
 
         // Resend invite if they are supposed to be here 
-        if (findPlayer(expired)) {
+        if (findPlayer(expired) !== -1) {
             if (players2[expired].tries < 3) {
                 chat.push(`/pc [RBW] ${expired} hasn't joined the party yet. ${3-players2[expired].tries} tries remaining!`)
                 players2[expired].tries++
@@ -188,7 +192,7 @@ bot.on("message", message => {
         }
         else joined = line0_arr[0];
 
-        if (findPlayer(joined)) {
+        if (findPlayer(joined) !== -1) {
             players2[joined].status = "joined";
             players2[joined].rank = !rank ? "NON" : rank;
             in_party.push(joined);
@@ -207,7 +211,7 @@ bot.on("message", message => {
         if (line0_arr[0].includes("[")) left = line0_arr[1];
         else left = line0_arr[0];
 
-        if (findPlayer(left)) {
+        if (findPlayer(left) !== -1) {
             players2[left].status = "left";
             in_party.filter(name => name !== left);
         }
@@ -226,6 +230,7 @@ bot.on("message", message => {
             bot.chat(`/pc Please choose the map ${map} when you join the game instead of ${line0_arr.slice(-1).join("")}.`);
             return gameReset();
         }
+        gameStarted = true;
         return;
     }
 
@@ -243,8 +248,7 @@ bot.on("message", message => {
 
         const uuids = players.map(p => p.minecraft.uuid);
         socket.emit("ActualGameStart", uuids);
-        
-        gameStarted = true;
+
         chat.push('/lobby');
         chat.push('/rejoin');
 
@@ -274,8 +278,11 @@ bot.on("message", message => {
     }
 
     if(line0.endsWith("died.") || line0.endsWith("disconnected")){
-        const p = findPlayer(line0_arr[0]);
-        if(p) return p.deaths!++;
+        const index = findPlayer(line0_arr[0]);
+        if(index !== -1) {
+            players[index].deaths!++;
+            streaks[index] = 0;
+        }
         if(nickChecked) {
             socket.emit("alertStaff", line0_arr[0], botInviteList.join(' '));
             return chat.push(`/pc Bot detected that ${line0_arr[0]} nicked midgame. Staff members have been alerted.`);
@@ -312,7 +319,9 @@ bot.on("message", message => {
             }
             set = true;
             try {
-                return findPlayer(line0_arr[0])!.deaths!++;
+                const index = findPlayer(line0_arr[0]);
+                players[index].deaths!++;
+                streaks[index] = 0;
             }
             catch(e) {
                 if(nickChecked) {
@@ -324,11 +333,11 @@ bot.on("message", message => {
             }
         }
 
-        let p = findPlayer(ign);
+        let index = findPlayer(ign);
 
-        if(!p) {
-            p = findPlayer(line0_arr.slice(-5, -4)[0].slice(0, -2));
-            if(!p) {
+        if(index === -1) {
+            index = findPlayer(line0_arr.slice(-5, -4)[0].slice(0, -2));
+            if(index === -1) {
                 if(nickChecked) {
                     socket.emit("alertStaff", ign, botInviteList.join(' '));
                    return chat.push(`Bot detected that a nicked midgame. Staff members have been alerted.`);
@@ -362,8 +371,21 @@ bot.on("message", message => {
         set = true;
 
         try {
-            p.kills!++;
-            return findPlayer(line0_arr[0])!.deaths!++;
+            players[index].kills!++;
+            streaks[index]++;
+            const msg = getMsg(index);
+
+            if(!firstKill) {
+                chat.push(`/pc ${players[index].minecraft.name} drew FIRST BLOOD!`);
+            }
+
+            if(msg !== '') {
+               chat.push(`/pc ${msg}`); 
+            }
+             
+            let index2 = findPlayer(line0_arr[0]);
+            streaks[index2] = 0;
+            return players[index2].deaths!++;
         }
         catch(e) {
             if(nickChecked) {
@@ -383,7 +405,9 @@ bot.on("message", message => {
     // Normal Death
     else if(line0.indexOf('fell into the void.') !== -1) {
         try {
-            return findPlayer(line0_arr[0])!.deaths!++;
+            let index = findPlayer(line0_arr[0]);
+            streaks[index] = 0; 
+            return players[index]!.deaths!++;
         }
         catch(e) {
             if(nickChecked) {
@@ -410,7 +434,7 @@ bot.on("message", message => {
 
     const kill = [line0_arr.slice(-1)[0].slice(0, -1).trim(), line0_arr[0].trim()];
 
-    if(!(findPlayer(kill[0]) && findPlayer(kill[1]))) {
+    if(findPlayer(kill[0]) === -1 || findPlayer(kill[1]) === -1) {
         return;
     }
 
@@ -438,18 +462,32 @@ bot.on("message", message => {
     set = true;
 
     try {
-        findPlayer(kill[0])!.kills!++;
+        const index = findPlayer(kill[0]);
+        streaks[index]++;
+        players[index].kills!++;
+
+        if(!firstKill) {
+            chat.push(`/pc ${players[index].minecraft.name} drew FIRST BLOOD!`);
+        }
+
+        const msg = getMsg(index);
+
+        if(msg !== '') {
+           chat.push(msg); 
+        }
     }
     catch(e) {
         if(nickChecked) {
             socket.emit("alertStaff", line0_arr[0], botInviteList.join(' '));
-            return chat.push(`Bot detected that ${kill[0]} nicked midgame. Staff members have been alerted.`);
+            return chat.push(`/pc Bot detected that ${kill[0]} nicked midgame. Staff members have been alerted.`);
         }
         errorMsg(kill[0]);
         return gameReset();
     }
     try {
-        return findPlayer(kill[1])!.deaths!++;
+        const index = findPlayer(kill[1]);
+        streaks[index] = 0;
+        return players[index].deaths!++;
     }
     catch(e) {
         if(nickChecked) {
@@ -463,13 +501,12 @@ bot.on("message", message => {
 })
 
 function findPlayer(ign: string) {
-    return players.find(player => player.minecraft.name === ign);
+    return players.findIndex(player => player.minecraft.name === ign);
 }
 
 function endGame(team: string[]) {
     if(peopleWhoBrokeBeds.length === 0) {
         gameStarted = false;
-        chat.push('/pc Game has to be re-queued.');
         return gameReset();
     }
     if(gameEnded) return;
@@ -520,7 +557,7 @@ function endGame(team: string[]) {
 
 function gameReset() {
     chat.push('/lobby');
-    fiveMinutesElapsed = false;
+    eightMinutesElapsed = false;
     gameStarted = false;
     gameEnded = false;
     peopleWhoBrokeBeds = [];
@@ -531,6 +568,8 @@ function gameReset() {
     botAssigned = false;
     nickChecked = false;
     players2 = { ...players2temp };
+    streaks = [];
+    firstKill = false;
     return players = [ ...pTemp ];
 }
 
@@ -541,6 +580,15 @@ function errorMsg(ign: string) {
     chat.push(`/pc Bot detected that ${ign} is nicked or is an alt. Please requeue or game will be voided.`);
 }
 
+function getMsg(num: number) {
+    return streaks[num] === 5? `${players[num].minecraft.name} is on a killing spree! [5 KILLSTREAK]` : streaks[num] === 10? `${players[num].minecraft.name} is on a RAMPAGE! [10 KILLSTREAK]` : ''; 
+}
+
+bot.on('kicked', function(reason) {
+    console.log(reason);
+    process.exit(1);
+});
+
 setInterval(() => {
     if (chat.length) {
         console.log(chat[0]);
@@ -549,7 +597,7 @@ setInterval(() => {
 }, 1250);
 
 setInterval(() => {
-    if(!gameEnded  && fiveMinutesElapsed) {
+    if(!gameEnded  && eightMinutesElapsed) {
         chat.push('/locraw');
     }
     if (botAssigned && !botPartied) {
