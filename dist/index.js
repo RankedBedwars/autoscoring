@@ -42,7 +42,7 @@ let timeout;
 bot.on("login", () => {
     console.log(`${bot.username} --> Online!`);
     bot.chat('/p leave');
-    socket = socket_io_client_1.io(`http://${process.env.LOCAL_SOCKET ? "localhost" : "rbw-s1.slicknicky10.me"}:${process.env.SOCKET_PORT}/?key=${process.env.SOCKET_KEY}&bot=${bot.username}`);
+    socket = socket_io_client_1.io(`http://${process.env.LOCAL_SOCKET ? "localhost" : "159.65.236.234"}:${process.env.SOCKET_PORT}/?key=${process.env.SOCKET_KEY}&bot=${bot.username}`);
     socket.on("actualgamestart", (p) => {
         players = p;
         console.log(`Bot received actual game start: ${JSON.stringify(players)}`);
@@ -229,7 +229,7 @@ bot.on("message", message => {
         }
         if (nickChecked) {
             socket.emit("alertStaff", line0_arr[0], botInviteList.join(' '));
-            return chat.push(`/pc Bot detected that ${line0_arr[0]} nicked midgame. Staff members have been alerted.`);
+            return;
         }
         errorMsg(line0_arr[0]);
         return gameReset();
@@ -268,7 +268,7 @@ bot.on("message", message => {
             catch (e) {
                 if (nickChecked) {
                     socket.emit("alertStaff", line0_arr[0], botInviteList.join(' '));
-                    return chat.push(`Bot detected that ${line0_arr[0]} nicked midgame. Staff members have been alerted. Stack:\n${e}`);
+                    return;
                 }
                 errorMsg(line0_arr[0]);
                 gameReset();
@@ -281,7 +281,7 @@ bot.on("message", message => {
             if (index === -1) {
                 if (nickChecked) {
                     socket.emit("alertStaff", ign, botInviteList.join(' '));
-                    return chat.push(`Bot detected that a nicked midgame. Staff members have been alerted.`);
+                    return;
                 }
                 errorMsg('');
                 return gameReset();
@@ -326,7 +326,7 @@ bot.on("message", message => {
         catch (e) {
             if (nickChecked) {
                 socket.emit("alertStaff", line0_arr[0], botInviteList.join(' '));
-                return chat.push(`/pc Bot detected that ${line0_arr[0]} nicked midgame. Staff members have been alerted.`);
+                return;
             }
             errorMsg(line0_arr[0]);
             return gameReset();
@@ -344,7 +344,7 @@ bot.on("message", message => {
         catch (e) {
             if (nickChecked) {
                 socket.emit("alertStaff", line0_arr[0], botInviteList.join(' '));
-                return chat.push(`/pc Bot detected that ${line0_arr[0]} nicked midgame. Staff members have been alerted.`);
+                return;
             }
             errorMsg(line0_arr[0]);
             return gameReset();
@@ -400,7 +400,7 @@ bot.on("message", message => {
     catch (e) {
         if (nickChecked) {
             socket.emit("alertStaff", line0_arr[0], botInviteList.join(' '));
-            return chat.push(`/pc Bot detected that ${kill[0]} nicked midgame. Staff members have been alerted.`);
+            return;
         }
         errorMsg(kill[0]);
         return gameReset();
@@ -413,7 +413,7 @@ bot.on("message", message => {
     catch (e) {
         if (nickChecked) {
             socket.emit("alertStaff", line0_arr[0], botInviteList.join(' '));
-            return chat.push(`Bot detected that ${kill[1]} nicked midgame. Staff members have been alerted.`);
+            return;
         }
         errorMsg(kill[1]);
         return gameReset();
