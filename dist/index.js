@@ -104,30 +104,6 @@ bot.on("message", message => {
         }
         return;
     }
-    if (line0.includes(`${bot.username}  forcetransfer`)) {
-        console.log(line0);
-        const mvp_pp = Object.keys(players2).find(key => players2[key].rank === "[MVP++]");
-        if (mvp_pp)
-            chat.push(`/p transfer ${mvp_pp}`);
-        else
-            chat.push("/p transfer " + botInviteList[Math.floor(Math.random() * players.length)]);
-    }
-    if (line0.slice(0, 1) === '{' && line0.includes(`"server"`)) {
-        console.log(line0);
-        if (line0.includes('lobby') && !gameEnded) {
-            botInviteList = [];
-            players = [];
-            players2 = {};
-            chat = [];
-            in_party = [];
-            botPartied = false;
-            gameReset();
-            gameEnded = true;
-            bot.chat("Game took too long to start. Please re-queue.");
-            bot.chat("/p leave");
-            return socket.emit("gameCancel");
-        }
-    }
     if (line0.includes(':')) {
         return;
     }
@@ -517,10 +493,6 @@ function errorMsg(ign) {
 function getMsg(num) {
     return streaks[num] === 5 ? `${players[num].minecraft.name} is on a killing spree! [5 KILLSTREAK]` : streaks[num] === 10 ? `${players[num].minecraft.name} is on a RAMPAGE! [10 KILLSTREAK]` : '';
 }
-bot.on('kicked', function (reason) {
-    console.log(reason);
-    process.exit(1);
-});
 setInterval(() => {
     if (chat.length) {
         console.log(chat[0]);
@@ -528,9 +500,6 @@ setInterval(() => {
     }
 }, 1250);
 setInterval(() => {
-    if (!gameEnded && eightMinutesElapsed) {
-        chat.push('/locraw');
-    }
     if (botAssigned && !botPartied) {
         botInviteList.forEach(player => {
             chat.push(`/p ${player}`);
