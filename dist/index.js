@@ -42,15 +42,22 @@ let timeout;
 bot.on("login", () => {
     console.log(`${bot.username} --> Online!`);
     bot.chat('/p leave');
-    socket = socket_io_client_1.io(`http://${process.env.LOCAL_SOCKET ? "localhost" : "159.65.236.234"}:${process.env.SOCKET_PORT}/?key=${process.env.SOCKET_KEY}&bot=${bot.username}`);
+    let connection = `http://${process.env.LOCAL_SOCKET ? "localhost" : "159.65.236.234"}:${process.env.SOCKET_PORT}/?key=${process.env.SOCKET_KEY}&bot=${bot.username}`;
+    console.log("connection --> " + connection);
+    socket = socket_io_client_1.io(connection);
     socket.on("actualgamestart", (p) => {
         players = p;
         console.log(`Bot received actual game start: ${JSON.stringify(players)}`);
         pTemp = [...players];
     });
+    socket.on("restart", () => {
+        console.log(`${bot.username} has restarted as it is offline.`);
+        system.exit(1);
+    });
     socket.on("gameStart", (data) => {
         const _players = data.players;
         const _map = data.map;
+        gameStarted = false;
         gameEnded = false;
         players = _players;
         pTemp = [...players];
@@ -211,6 +218,7 @@ bot.on("message", message => {
                 }
             });
             nickChecked = true;
+            gameStarted = true;
             if (timeout)
                 clearTimeout(timeout);
         }, 5500);
