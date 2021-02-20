@@ -41,16 +41,16 @@ let firstKill: boolean = false;
 
 let timeout: NodeJS.Timeout | undefined;
 
-bot.on("login", () => {
+bot.once("login", () => {
     console.log(`${bot.username} --> Online!`);
-    bot.chat('/p leave');
-    let connection = `http://${process.env.LOCAL_SOCKET ? "localhost" : "159.65.236.234"}:${process.env.SOCKET_PORT!}/?key=${process.env.SOCKET_KEY!}&bot=${bot.username}`;
+    let connection = `http://${process.env.LOCAL_SOCKET ? "localhost" : "64.227.11.4"}:${process.env.SOCKET_PORT!}/?key=${process.env.SOCKET_KEY!}&bot=${bot.username}`;
     console.log("connection --> " + connection);
     socket = io(connection);
     socket.on("actualgamestart", (p: Player[]) => {
         players = p;
         console.log(`Bot received actual game start: ${JSON.stringify(players)}`);
         pTemp = [...players];
+        botPartied = true;
 
     })
     socket.on("restart", () =>  {
@@ -86,6 +86,7 @@ bot.on("login", () => {
         botAssigned = true;
 
         chat = ['/p leave', ...chat];
+        botPartied = false;
         console.log('Game Started');
 
         timeout = setTimeout(() => {
@@ -530,8 +531,8 @@ function endGame(team: string[]) {
         }        
     })
 
-    console.log(`Game finished, sending back: ${JSON.stringify(players)}`);
-    socket.emit("gameFinish", players);
+    console.log(`Game finished, sending back: ${JSON.stringify(players)}\n\nInitial Players: ${JSON.stringify(pTemp)}`);
+    socket.emit("gameFinish", players, pTemp);
     gameReset();
     botInviteList = [];
     players = [];

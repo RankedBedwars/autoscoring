@@ -39,16 +39,16 @@ let eightMinutesElapsed = false;
 let streaks = [];
 let firstKill = false;
 let timeout;
-bot.on("login", () => {
+bot.once("login", () => {
     console.log(`${bot.username} --> Online!`);
-    bot.chat('/p leave');
-    let connection = `http://${process.env.LOCAL_SOCKET ? "localhost" : "159.65.236.234"}:${process.env.SOCKET_PORT}/?key=${process.env.SOCKET_KEY}&bot=${bot.username}`;
+    let connection = `http://${process.env.LOCAL_SOCKET ? "localhost" : "64.227.11.4"}:${process.env.SOCKET_PORT}/?key=${process.env.SOCKET_KEY}&bot=${bot.username}`;
     console.log("connection --> " + connection);
     socket = socket_io_client_1.io(connection);
     socket.on("actualgamestart", (p) => {
         players = p;
         console.log(`Bot received actual game start: ${JSON.stringify(players)}`);
         pTemp = [...players];
+        botPartied = true;
     });
     socket.on("restart", () => {
         console.log(`${bot.username} has restarted as it is offline.`);
@@ -77,6 +77,7 @@ bot.on("login", () => {
         players2temp = { ...players2 };
         botAssigned = true;
         chat = ['/p leave', ...chat];
+        botPartied = false;
         console.log('Game Started');
         timeout = setTimeout(() => {
             eightMinutesElapsed = true;
