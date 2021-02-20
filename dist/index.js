@@ -99,7 +99,7 @@ bot.once("login", () => {
 bot.on("message", message => {
     const line0 = message.toString().split('\n')[0];
     const line0_arr = line0.split(' ');
-    if (message.toString().split('\n').length > 1) {
+    if (message.toString().split('\n').length > 1 && !gameStarted && !gameEnded) {
         const line1 = message.toString().split('\n')[1];
         const line1_arr = line1.split(' ');
         if (ranks.includes(line1_arr[0]) && line1_arr[3] === 'invited' && line1_arr[4] === 'you' && botInviteList.includes(line1_arr[1]) && !(gameStarted || gameEnded)) {
@@ -463,8 +463,8 @@ function endGame(team) {
             player.bedsLost++;
         }
     });
-    console.log(`Game finished, sending back: ${JSON.stringify(players)}`);
-    socket.emit("gameFinish", players);
+    console.log(`Game finished, sending back: ${JSON.stringify(players)}\n\nInitial Players: ${JSON.stringify(pTemp)}`);
+    socket.emit("gameFinish", players, pTemp);
     gameReset();
     botInviteList = [];
     players = [];

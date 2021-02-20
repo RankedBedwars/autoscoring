@@ -111,7 +111,7 @@ bot.on("message", message => {
     const line0 = message.toString().split('\n')[0];
     const line0_arr = line0.split(' ');
 
-    if(message.toString().split('\n').length > 1) {
+    if(message.toString().split('\n').length > 1 && !gameStarted && !gameEnded) {
         const line1 = message.toString().split('\n')[1];
         const line1_arr = line1.split(' ');
 
