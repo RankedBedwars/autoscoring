@@ -1,28 +1,9 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const dotenv = __importStar(require("dotenv"));
+const dotenv_1 = __importDefault(require("dotenv"));
 const socket_io_client_1 = require("socket.io-client");
 const mineflayer_1 = __importDefault(require("mineflayer"));
 const mineflayer_bloodhound_1 = __importDefault(require("mineflayer-bloodhound"));
@@ -62,7 +43,7 @@ const colourMap = new Map([
     ['§9', 'Blue'],
     ['Blue', '§9']
 ]);
-dotenv.config({ path: __dirname + '/.env' });
+dotenv_1.default.config();
 ;
 const data = {
     players: {},
@@ -207,14 +188,11 @@ bot.on('message', (raw) => {
         socket?.emit('ActualGameStart', uuids);
         chat('/lobby', '/rejoin', '/pc 【BANNED ITEMS】: Punch Bow ∣ Obby ∣ Pop-Up Tower ∣ Water (outside base) ∣ KB Stick', '/pc 〖DIA II RESTRICTIONS〗: BridgeEggs ∣ JumpBoost  ∣ Bow', '/pc 〖BB RESTRICTIONS〗 EnderPearls');
         for (const username in bot.players) {
-            if (isWhitelisted(username) === false && bot.players[username].ping === 1) {
-                if (username === bot.player.username) {
-                    chat('/pc Wrong teams joined. Please re-queue or game will be voided.');
-                }
-                else {
+            if (isWhitelisted(username) === false && bot.players[username].entity.equipment[4]) {
+                if (username !== bot.player.username) {
                     error(username);
+                    return softReset();
                 }
-                return softReset();
             }
         }
     }
