@@ -17,11 +17,11 @@ const AFK_REGEX = /^You are AFK\. Move around to return from AFK\./m;
 const GAME_START_REGEX = /^\s*Protect your bed and destroy the enemy beds\./m;
 const BEDS_DESTROYED_REGEX = /^All beds have been destroyed!/m;
 const DEATH_NO_CAUSE_REGEX = /^(\w{1,16}) (?:died\.|disconnected)/m;
-const FINAL_KILL_REGEX = /^§r(§\w)(\w{1,16}).+§r(?:(§\w)(\w{1,16})|§7fell into the void|§7disconnected).+FINAL KILL!$/m;
-const KILL_REGEX = /^§r(§\w)(\w{1,16}).+§r(?:(§\w)(\w{1,16})|§7fell into the void|§7disconnected)/m;
+const FINAL_KILL_REGEX = /^§r(§[a-f89])(\w{1,16}).+§r(?:(§[a-f89])(\w{1,16})|§7fell into the void|§7disconnected).+FINAL KILL!$/m;
+const KILL_REGEX = /^§r(§[a-f89])(\w{1,16}).+§r(?:(§[a-f89])(\w{1,16})|§7fell into the void|§7disconnected)/m;
 const PARTY_MESSAGE_REGEX = /Party > (?:\[.+\] )(\w{1,16}): (.+)/m;
 const LOBBY_JOIN_REGEX = /^(\w{1,16}) has joined/m;
-const BED_DESTROYED_REGEX = /BED DESTRUCTION >.*§r(§\w)(\w{1,16})\s*§r§7/m;
+const BED_DESTROYED_REGEX = /BED DESTRUCTION >.*§r(§[a-f89])(\w{1,16})\s*§r§7/m;
 const TEAM_WIN_REGEX = /^\s+(Red|Blue|Green|Yellow|Aqua|White|Pink|Gray)\s+-\s+(?:\[.+\] )?\w{1,16}/m;
 const AFK_KICK_REGEX = /^(\w{1,16}) was kicked for being AFK!$/m;
 const DIAMOND_GEN_REGEX = /^Diamond Generators have been upgraded to Tier II/m;
@@ -188,7 +188,7 @@ bot.on('message', (raw) => {
         socket?.emit('ActualGameStart', uuids);
         chat('/lobby', '/rejoin', '/pc 【BANNED ITEMS】: Punch Bow ∣ Obby ∣ Pop-Up Tower ∣ Water (outside base) ∣ KB Stick', '/pc 〖DIA II RESTRICTIONS〗: BridgeEggs ∣ JumpBoost  ∣ Bow', '/pc 〖BB RESTRICTIONS〗 EnderPearls');
         for (const username in bot.players) {
-            if (isWhitelisted(username) === false && bot.players[username].entity.equipment[4]) {
+            if (isWhitelisted(username) === false && bot.players[username]?.entity?.equipment?.[4]) {
                 if (username !== bot.player.username) {
                     error(username);
                     return softReset();
@@ -265,7 +265,7 @@ function handleKill(victimName, killerName, victimColour, killerColour, final = 
     if (!data.startedAt)
         return;
     const now = Date.now();
-    const killer = data.players[killerName] ?? { kills: 0, finalKills: 0, streak: 0, killTiming: [] };
+    const killer = isWhitelisted(killerName) ? data.players[killerName] ?? { kills: 0, finalKills: 0, streak: 0, killTiming: [] } : null;
     const victim = data.players[victimName] ?? { streak: 0, deaths: 0, finalDeaths: 0 };
     if (!killer) {
         ++victim[final ? 'finalDeaths' : 'deaths'];
@@ -277,7 +277,7 @@ function handleKill(victimName, killerName, victimColour, killerColour, final = 
     ++victim[final ? 'finalDeaths' : 'deaths'];
     ++killer[final ? 'finalKills' : 'kills'];
     ++killer.streak;
-    if (victim.streak > 2) {
+    if (victim.streak > 4) {
         chat(`/pc ${randomValue(streakEndMessages).replace('{killer}', killerName).replace('{victim}', victimName).replace('{streak}', victim.streak.toString())}`);
         victim.streak = 0;
     }

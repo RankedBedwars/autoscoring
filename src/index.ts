@@ -247,7 +247,7 @@ bot.on('message', (raw: any) => {
     chat('/lobby', '/rejoin', '/pc 【BANNED ITEMS】: Punch Bow ∣ Obby ∣ Pop-Up Tower ∣ Water (outside base) ∣ KB Stick', '/pc 〖DIA II RESTRICTIONS〗: BridgeEggs ∣ JumpBoost  ∣ Bow', '/pc 〖BB RESTRICTIONS〗 EnderPearls');
 
     for (const username in bot.players) {
-      if (isWhitelisted(username) === false && bot.players[username].entity.equipment[4]) {
+      if (isWhitelisted(username) === false && bot.players[username]?.entity?.equipment?.[4]) {
         if (username !== bot.player.username) {
           error(username);
 
