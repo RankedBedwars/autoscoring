@@ -23,10 +23,11 @@ const KILL_REGEX = /^§r(§[a-f89])(\w{1,16}).+§r(?:(§[a-f89])(\w{1,16})|§7fe
 //const FINAL_KILL_REGEX = /^(?!§r§eYou will respawn)§r(§\w)(\w{1,16}).+§r(?:(§\w)(\w{1,16})|§7fell into the void|§7disconnected).+FINAL KILL!$/m;
 //const KILL_REGEX = /^(?!§r§eYou will respawn)§r(§\w)(\w{1,16}).+§r(?:(§\w)(\w{1,16})|§7fell into the void|§7disconnected)/m;
 
-const PARTY_MESSAGE_REGEX = /Party > (?:\[.+\] )(\w{1,16}): (.+)/m;
+const PARTY_MESSAGE_REGEX = /^Party > (?:\[.+\] )?(\w{1,16}): (.+)/m;
 const LOBBY_JOIN_REGEX = /^(\w{1,16}) has joined/m;
 const BED_DESTROYED_REGEX = /BED DESTRUCTION >.*§r(§[a-f89])(\w{1,16})\s*§r§7/m;
 const TEAM_WIN_REGEX = /^\s+(Red|Blue|Green|Yellow|Aqua|White|Pink|Gray)\s+-\s+(?:\[.+\] )?\w{1,16}/m;
+const GAME_END_REGEX = /^\s+1st Killer\s+-/m;
 const AFK_KICK_REGEX = /^(\w{1,16}) was kicked for being AFK!$/m;
 const DIAMOND_GEN_REGEX = /^Diamond Generators have been upgraded to Tier II/m;
 
@@ -61,7 +62,9 @@ interface GameData {
   partied: boolean,
   number: number,
   beds: number,
-  diamond: boolean
+  diamond: boolean,
+  team: null | string,
+  timer: NodeJS.Timeout | null
 };
 
 const data: GameData = {
@@ -74,7 +77,9 @@ const data: GameData = {
   partied: false,
   number: 0,
   beds: 0,
-  diamond: false
+  diamond: false,
+  team: null,
+  timer: null
 };
 
 const messages: any = [];
@@ -127,6 +132,7 @@ bot.once('login', () => {
     }
   }, 1250);
 
+  socket.on('isAssigned', (callback: Function) => callback(bot.partied));
   socket.on('actualgamestart', onActualGameStart);
   socket.on('gameStart', onGameStart);
   socket.once('restart', () => {
@@ -242,6 +248,8 @@ bot.on('message', (raw: any) => {
   } else if (GAME_START_REGEX.test(message)) {
     const uuids = Object.values(data.players).map(p => p.minecraft.uuid);
     data.startedAt = Date.now();
+
+    if (data.timer) clearTimeout(data.timer);
     
     socket?.emit('ActualGameStart', uuids);
     chat('/lobby', '/rejoin', '/pc 【BANNED ITEMS】: Punch Bow ∣ Obby ∣ Pop-Up Tower ∣ Water (outside base) ∣ KB Stick', '/pc 〖DIA II RESTRICTIONS〗: BridgeEggs ∣ JumpBoost  ∣ Bow', '/pc 〖BB RESTRICTIONS〗 EnderPearls');
@@ -282,10 +290,6 @@ bot.on('message', (raw: any) => {
     if (isWhitelisted(username) === false) return;
 
     ++data.players[username].bedsBroken;
-  } else if (data.startedAt && TEAM_WIN_REGEX.test(message)) {
-    const [, team ]: any = message.match(TEAM_WIN_REGEX);
-
-    onGameEnd(colourMap.get(team));
   } else if (AFK_KICK_REGEX.test(message)) {
     const [, username ]: any = message.match(AFK_KICK_REGEX);
 
@@ -294,6 +298,18 @@ bot.on('message', (raw: any) => {
     chat(`/pc 〘${username}〙 STRIKED for AFK.`);
 
     socket?.emit('playerStrike', { id: data.players[username].discord, strikes: 1, reason: 'afk' });
+  }
+
+  if (data.startedAt && TEAM_WIN_REGEX.test(message)) {
+    const [, team ]: any = message.match(TEAM_WIN_REGEX);
+
+    data.team = colourMap.get(team) ?? null;
+  }
+  
+  if (GAME_END_REGEX.test(message)) {
+    if (data.team === null) return;
+
+    return onGameEnd(data.team);
   }
 });
 
@@ -313,10 +329,10 @@ const killMessages: { [key: number]: string[] } = {
     '✦〘{username}〙you’re still at it MADLAD?! 『8 KILLSTREAK』',
     '✦〘{username}〙is a certified killing machine! 『8 KILLSTREAK』'
   ],
-  '12': [
-    '✦〘{username}〙you’re too much of a monster HAVE SOME MERCY 『12 KILLSTREAK』',
-    '✦〘{username}〙you’re officially a legend at this game.. 『12 KILLSTREAK』',
-    '✦〘{username}〙is near UNSTOPPABLE! 『12 KILLSTREAK』'
+  '10': [
+    '✦〘{username}〙you’re too much of a monster HAVE SOME MERCY 『10 KILLSTREAK』',
+    '✦〘{username}〙you’re officially a legend at this game.. 『10 KILLSTREAK』',
+    '✦〘{username}〙is near UNSTOPPABLE! 『10 KILLSTREAK』'
   ]
 };
 
@@ -362,7 +378,7 @@ function handleKill(victimName: string, killerName: string, victimColour: string
   }
 
   if (kills >= 2 && kills <= 4) {
-    chat(`/pc ${killMessages[0][kills - 2].replace('{username}', killerName)}`);
+    // chat(`/pc ${killMessages[0][kills - 2].replace('{username}', killerName)}`);
   }
 
   killer.killTiming.unshift(now);
@@ -377,6 +393,14 @@ async function onActualGameStart(players: Player[]) {
 }
 
 async function onGameStart(game: GameStart) {
+  if (data.partied) {
+    console.log('ALREADY IN A GAME');
+
+    chat('/pc Stopped myself from being assigned to a different game.', `/pc Please report this to staff: #${game.number}`);
+
+    return socket?.emit('gameCancel');
+  }
+
   data.players = game.players.reduce((a: any, p: Player, i: number) => {
     a[p.minecraft.name] = {
       minecraft: p.minecraft,
@@ -407,10 +431,12 @@ async function onGameStart(game: GameStart) {
   data.diamond = false;
   data.startedAt = null;
   data.endedAt = null;
+  data.partied = true;
+  data.team = null;
 
   chat(...game.players.map(p => `/p ${p.minecraft.name}`), '/p settings allinvite');
 
-  setTimeout(async () => {
+  data.timer = setTimeout(async () => {
     if (data.startedAt || data.endedAt) return;
 
     socket?.emit('gameCancel');
@@ -446,6 +472,7 @@ async function onGameEnd(winner?: string) {
     }
   }
 
+  await chat('/lobby', '/p leave');
   socket?.emit('gameFinish', { players: data.players, number: data.number });
 
   reset();
